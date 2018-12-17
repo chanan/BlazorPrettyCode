@@ -16,14 +16,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="content\blazorPrettyCode.js" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Blazorous" Version="0.7.1" />
     <PackageReference Include="CSHTMLTokenizer" Version="0.1.5" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.Browser" Version="0.7.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Blazor.Build" Version="0.7.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Blazor.Build" Version="0.7.0" />
   </ItemGroup>
 
 </Project>
