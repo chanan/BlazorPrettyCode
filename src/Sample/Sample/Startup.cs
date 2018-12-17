@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Blazor.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BlazorPrettyCode
+namespace Sample
 {
     public class Startup
     {

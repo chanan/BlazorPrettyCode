@@ -14,4 +14,8 @@
     <DotNetCliToolReference Include="Microsoft.AspNetCore.Blazor.Cli" Version="0.7.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\BlazorPrettyCode\BlazorPrettyCode.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,0 +1,11 @@
+﻿@using CSHTMLTokenizer.Tokens
+
+@if (Tag != null)
+{
+    <span>&lt;/</span><span>@Tag.Name</span><span>&gt;</span>
+}
+
+
+@functions {
+    [Parameter] private EndTag Tag { get; set; }
+}

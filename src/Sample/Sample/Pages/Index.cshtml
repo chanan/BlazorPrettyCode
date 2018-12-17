@@ -1,0 +1,48 @@
+﻿@page "/"
+@addTagHelper *,BlazorPrettyCode
+
+<h1>Blazor Pretty Code</h1>
+
+<p>The PrettyCode comoponent is a Blazor component that is meant to be used by Blazor developers to format CSHTML for their documentation site.</p>
+
+<p><b>This is a work in progress and currently only supports HTML!</b></p>
+
+<h2>Features</h2>
+
+<ul>
+    <li>Format and display HTML</li>
+    <li>Format and display CSHTML (not done)</li>
+    <li>Theme support (in progress)</li>
+    <li>Line numbering (not done)</li>
+    <li>Copy button (not done)</li>
+    <li>Collapse (not done)</li>
+</ul>
+
+<h2>Dependent projects</h2>
+<ul>
+    <li><a href="https://github.com/chanan/CSHTMLTokenizer">CSHTMLTokenizer</a> is used to convert CSHTML into tokens for display</li>
+    <li><a href="https://chanan.github.io/Blazorous/">Blazorous</a> is used to create the pretty code and theming</li>
+</ul>
+
+
+<h2>Demo</h2>
+
+<PrettyCode codeId="demo" />
+
+<div id="demo">
+    <b n="v" n2='v2'>This</b> <br />
+    is a test!
+</div>
+
+<p>The above was acheived by:</p>
+
+<PrettyCode CodeId="demoSource" Debug="true" />
+
+<div id="demoSource">
+    &lt;PrettyCode codeId="demo" />
+
+    <div id="demo">
+        <b n="v" n2='v2'>This</b> <br />
+        is a test!
+    </div>
+</div>
