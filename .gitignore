@@ -259,3 +259,8 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+
+# Include dlls in the docs folder
+!/docs/*
+!/docs/_framework/*
+!/docs/_framework/_bin/*
