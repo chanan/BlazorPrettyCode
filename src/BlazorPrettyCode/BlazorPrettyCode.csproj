@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="Blazorous" Version="0.7.1" />
-    <PackageReference Include="CSHTMLTokenizer" Version="0.1.5" />
+    <PackageReference Include="CSHTMLTokenizer" Version="0.2.1" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.Browser" Version="0.7.0" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.Build" Version="0.7.0" />
   </ItemGroup>

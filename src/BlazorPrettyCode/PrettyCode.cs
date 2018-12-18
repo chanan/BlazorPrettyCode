@@ -1,5 +1,4 @@
 ﻿using Blazorous;
-using Blazorous.Components;
 using BlazorPrettyCode.Themes;
 using CSHTMLTokenizer;
 using CSHTMLTokenizer.Tokens;
@@ -10,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using static CSHTMLTokenizer.Tokens.AttributeValue;
 
 namespace BlazorPrettyCode
 {
@@ -29,6 +27,8 @@ namespace BlazorPrettyCode
         private string attributeNameCss;
         private string attributeValueCss;
         private string textCss;
+        private string quotedStringCss;
+        private string cshtmlKeywordCss;
         private bool isInitDone = false;
 
         protected async override Task OnInitAsync()
@@ -40,6 +40,8 @@ namespace BlazorPrettyCode
             attributeNameCss = await theme.AttributeName.ToCss();
             attributeValueCss = await theme.AttributeValue.ToCss();
             textCss = await theme.Text.ToCss();
+            quotedStringCss = await theme.QuotedString.ToCss();
+            cshtmlKeywordCss = await theme.CSHtmlKeyword.ToCss();
             isInitDone = true;
         }
 
@@ -87,15 +89,15 @@ namespace BlazorPrettyCode
                 {
                     case TokenType.Text:
                         var text = (Text)token;
-                        if(text.Content.Length != 0) BuildRenderText(builder, text);
+                        BuildRenderText(builder, text);
                         break;
                     case TokenType.StartTag:
                         var startTag = (StartTag)token;
-                        if (startTag.Name.Length != 0) BuildRenderStartTag(builder, startTag);
+                        BuildRenderStartTag(builder, startTag);
                         break;
                     case TokenType.EndTag:
                         var endTag = (EndTag)token;
-                        if (endTag.Name.Length != 0) BuildRenderEndTag(builder, endTag);
+                        BuildRenderEndTag(builder, endTag);
                         break;
                     default:
                         break;
@@ -105,11 +107,48 @@ namespace BlazorPrettyCode
 
         private void BuildRenderText(RenderTreeBuilder builder, Text text)
         {
+            if (text.Tokens.Count == 0)
+            {
+                builder.OpenComponent<Dynamic>(Next());
+                builder.AddAttribute(Next(), "TagName", "span");
+                builder.AddAttribute(Next(), "css", textCss);
+                builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
+                {
+                    builder2.AddContent(Next(), text.Content);
+                }));
+                builder.CloseComponent();
+            }
+            else
+            {
+                foreach(var token in text.Tokens)
+                {
+                    switch (token.TokenType)
+                    {
+                        case TokenType.Text:
+                            var innerText = (Text)token;
+                            BuildRenderText(builder, innerText);
+                            break;
+                        case TokenType.QuotedString:
+                            var quotedTag = (QuotedString)token;
+                            BuildRendeQuotedTag(builder, quotedTag);
+                            break;
+                        default:
+                            break;
+                    }
+
+                }
+            }
+        }
+
+        private void BuildRendeQuotedTag(RenderTreeBuilder builder, QuotedString quotedTag)
+        {
             builder.OpenComponent<Dynamic>(Next());
             builder.AddAttribute(Next(), "TagName", "span");
-            builder.AddAttribute(Next(), "css", textCss);
-            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) => {
-                builder2.AddContent(Next(), text.Content);
+            builder.AddAttribute(Next(), "css", quotedStringCss);
+            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
+            {
+                var quote = GetQuoteChar(quotedTag.QuoteMark);
+                builder2.AddContent(Next(), quote + quotedTag.Content + quote);
             }));
             builder.CloseComponent();
         }
@@ -166,11 +205,11 @@ namespace BlazorPrettyCode
                 {
                     case TokenType.AttributeName:
                         var attributeName = (AttributeName)token;
-                        if (attributeName.Name.Length != 0) buildRenderAttributeName(builder, attributeName);
+                        BuildRenderAttributeName(builder, attributeName);
                         break;
                     case TokenType.AttributeValue:
                         var attributeValue = (AttributeValue)token;
-                        if (attributeValue.Value.Length != 0) buildRenderAttributeValue(builder, attributeValue);
+                        BuildRenderAttributeValue(builder, attributeValue);
                         break;
                     default:
                         break;
@@ -178,22 +217,99 @@ namespace BlazorPrettyCode
             }
         }
 
-        private void buildRenderAttributeValue(RenderTreeBuilder builder, AttributeValue attributeValue)
+        private void BuildRenderAttributeValue(RenderTreeBuilder builder, AttributeValue attributeValue)
         {
             builder.OpenComponent<Dynamic>(Next());
             builder.AddAttribute(Next(), "TagName", "span");
             builder.AddAttribute(Next(), "css", attributeValueCss);
             builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
             {
-                var quote = GetQuoteChar(attributeValue);
-                builder2.AddContent(Next(), "=" + quote + attributeValue.Value + quote);
+                var quote = GetQuoteChar(attributeValue.QuoteMark);
+                builder2.AddContent(Next(), "=" + quote);
+            }));
+            builder.CloseComponent();
+
+            if (attributeValue.Tokens.Count == 0)
+            {
+                builder.OpenComponent<Dynamic>(Next());
+                builder.AddAttribute(Next(), "TagName", "span");
+                builder.AddAttribute(Next(), "css", attributeValueCss);
+                builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
+                {
+                    builder2.AddContent(Next(), attributeValue.Value);
+                }));
+                builder.CloseComponent();
+            }
+            else
+            {
+                foreach(var token in attributeValue.Tokens)
+                {
+                    switch (token.TokenType)
+                    {
+                        case TokenType.Text:
+                            var innerText = (Text)token;
+                            BuildRenderText(builder, innerText);
+                            break;
+                        case TokenType.AttributeValueStatement:
+                            var attributeValueStatement = (AttributeValueStatement)token;
+                            BuildRendeAttributeValueStatement(builder, attributeValueStatement);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            builder.OpenComponent<Dynamic>(Next());
+            builder.AddAttribute(Next(), "TagName", "span");
+            builder.AddAttribute(Next(), "css", attributeValueCss);
+            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
+            {
+                var quote = GetQuoteChar(attributeValue.QuoteMark);
+                builder2.AddContent(Next(), quote);
             }));
             builder.CloseComponent();
         }
 
-        private string GetQuoteChar(AttributeValue attributeValue)
+        private void BuildRendeAttributeValueStatement(RenderTreeBuilder builder, AttributeValueStatement attributeValueStatement)
         {
-            switch (attributeValue.QuoteMark)
+            builder.OpenComponent<Dynamic>(Next());
+            builder.AddAttribute(Next(), "TagName", "span");
+            builder.AddAttribute(Next(), "css", cshtmlKeywordCss);
+            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
+            {
+                var parens = attributeValueStatement.HasParentheses ? "(" : "";
+                builder2.AddContent(Next(), "@" + parens);
+                
+            }));
+            builder.CloseComponent();
+
+            builder.OpenComponent<Dynamic>(Next());
+            builder.AddAttribute(Next(), "TagName", "span");
+            builder.AddAttribute(Next(), "css", attributeValueCss);
+            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
+            {
+                builder2.AddContent(Next(), attributeValueStatement.Content);
+
+            }));
+            builder.CloseComponent();
+
+            if(attributeValueStatement.HasParentheses)
+            {
+                builder.OpenComponent<Dynamic>(Next());
+                builder.AddAttribute(Next(), "TagName", "span");
+                builder.AddAttribute(Next(), "css", cshtmlKeywordCss);
+                builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
+                {
+                    builder2.AddContent(Next(), ")");
+
+                }));
+                builder.CloseComponent();
+            }
+        }
+
+        private string GetQuoteChar(QuoteMarkType quoteMark)
+        {
+            switch (quoteMark)
             {
                 case QuoteMarkType.Unquoted:
                     return string.Empty;
@@ -206,7 +322,7 @@ namespace BlazorPrettyCode
             }
         }
 
-        private void buildRenderAttributeName(RenderTreeBuilder builder, AttributeName attributeName)
+        private void BuildRenderAttributeName(RenderTreeBuilder builder, AttributeName attributeName)
         {
             builder.OpenComponent<Dynamic>(Next());
             builder.AddAttribute(Next(), "TagName", "span");

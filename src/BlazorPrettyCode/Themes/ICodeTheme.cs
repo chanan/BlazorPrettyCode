@@ -11,5 +11,7 @@ namespace BlazorPrettyCode.Themes
         ICss AttributeName { get; }
         ICss AttributeValue { get; }
         ICss Text { get; }
+        ICss QuotedString { get; }
+        ICss CSHtmlKeyword { get; }
     }
 }

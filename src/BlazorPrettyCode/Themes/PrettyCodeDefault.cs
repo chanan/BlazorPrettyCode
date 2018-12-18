@@ -27,5 +27,8 @@ namespace BlazorPrettyCode.Themes
         public ICss AttributeName => Css.CreateNew().AddRules("color", "#36c", "font-style", "italic");
         public ICss AttributeValue => Css.CreateNew().AddRule("color", "#093");
         public ICss Text => Css.CreateNew().AddRule("color", "#000");
+        public ICss QuotedString => Css.CreateNew().AddRule("color", "#093");
+        public ICss CSHtmlKeyword => Css.CreateNew().AddRules("background-color", "yellow", "color", "black");
+
     }
 }
