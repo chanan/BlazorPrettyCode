@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Blazor.Components;
 using Microsoft.AspNetCore.Blazor.RenderTree;
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,9 +17,9 @@ namespace BlazorPrettyCode
     {
         [Parameter] private string CodeId { get; set; }
         [Parameter] private bool Debug { get; set; }
-        [Parameter] private bool ReplaceLTForComponents { get; set; } = true;
+        [Parameter] private string CodeFile { get; set; }
+
         private List<IToken> Tokens { get; set; } = new List<IToken>();
-        private bool rendered = false;
         private int i = 0;
         private ICodeTheme theme = new PrettyCodeDefault();
         private string preCss;
@@ -31,9 +32,11 @@ namespace BlazorPrettyCode
         private string cshtmlKeywordCss;
         private bool isInitDone = false;
 
+        [Inject]
+        protected HttpClient HttpClient { get; set; }
+
         protected async override Task OnInitAsync()
         {
-            //Setup theme
             preCss = await theme.Pre.ToCss();
             tagSymbolsCss = await theme.TagSymbols.ToCss();
             tagNameCss = await theme.TagName.ToCss();
@@ -42,19 +45,11 @@ namespace BlazorPrettyCode
             textCss = await theme.Text.ToCss();
             quotedStringCss = await theme.QuotedString.ToCss();
             cshtmlKeywordCss = await theme.CSHtmlKeyword.ToCss();
-            isInitDone = true;
-        }
 
-        protected async override Task OnAfterRenderAsync()
-        {
-            if (rendered) return;
-            rendered = true;
-            var str = await JSInterop.GetAndHide(CodeId);
-            if (ReplaceLTForComponents) str = str.Replace("&lt;", "<").Replace("&gt;", ">");
-            if (Debug) Console.WriteLine("Input: " + str);
+            var str = await HttpClient.GetStringAsync(CodeFile);
             Tokens = Tokenizer.Parse(str);
             if (Debug) PrintToConsole();
-            StateHasChanged();
+            isInitDone = true;
         }
 
         private void PrintToConsole()
@@ -105,13 +100,14 @@ namespace BlazorPrettyCode
             }
         }
 
-        private void BuildRenderText(RenderTreeBuilder builder, Text text)
+        private void BuildRenderText(RenderTreeBuilder builder, Text text, string css = null)
         {
+            if (css == null) css = textCss;
             if (text.Tokens.Count == 0)
             {
                 builder.OpenComponent<Dynamic>(Next());
                 builder.AddAttribute(Next(), "TagName", "span");
-                builder.AddAttribute(Next(), "css", textCss);
+                builder.AddAttribute(Next(), "css", css);
                 builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
                 {
                     builder2.AddContent(Next(), text.Content);
@@ -248,7 +244,7 @@ namespace BlazorPrettyCode
                     {
                         case TokenType.Text:
                             var innerText = (Text)token;
-                            BuildRenderText(builder, innerText);
+                            BuildRenderText(builder, innerText, attributeValueCss);
                             break;
                         case TokenType.AttributeValueStatement:
                             var attributeValueStatement = (AttributeValueStatement)token;
