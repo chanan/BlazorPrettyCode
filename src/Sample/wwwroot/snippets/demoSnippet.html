@@ -1,0 +1,9 @@
+﻿@page "/"
+
+@foreach(var item in list) {
+    <h1>@item</h1>
+}
+
+@functions {
+    var list = new List<string> { "hello", "world" };
+}

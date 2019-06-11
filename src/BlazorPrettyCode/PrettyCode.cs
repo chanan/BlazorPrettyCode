@@ -1,10 +1,9 @@
-﻿using Blazorous;
-using BlazorPrettyCode.Themes;
+﻿using BlazorPrettyCode.Themes;
+using BlazorStyled;
 using CSHTMLTokenizer;
 using CSHTMLTokenizer.Tokens;
-using Microsoft.AspNetCore.Blazor;
-using Microsoft.AspNetCore.Blazor.Components;
-using Microsoft.AspNetCore.Blazor.RenderTree;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.RenderTree;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -13,86 +12,110 @@ using System.Threading.Tasks;
 
 namespace BlazorPrettyCode
 {
-    public class PrettyCode : BlazorComponent
+    public class PrettyCode : ComponentBase
     {
-        [Parameter] private string CodeId { get; set; }
         [Parameter] private bool Debug { get; set; }
         [Parameter] private string CodeFile { get; set; }
 
         private List<IToken> Tokens { get; set; } = new List<IToken>();
+        private bool _isInitDone = false;
         private int i = 0;
-        private ICodeTheme theme = new PrettyCodeDefault();
-        private string preCss;
-        private string tagSymbolsCss;
-        private string tagNameCss;
-        private string attributeNameCss;
-        private string attributeValueCss;
-        private string textCss;
-        private string quotedStringCss;
-        private string cshtmlKeywordCss;
-        private bool isInitDone = false;
+
+        private readonly ICodeTheme _theme = new PrettyCodeDefault();
+        private string _preClass;
+        private string _tagSymbolsClass;
+        private string _tagNameClass;
+        private string _attributeNameClass;
+        private string _attributeValueClass;
+        private string _textClass;
+        private string _quotedStringClass;
+        private string _cshtmlKeywordClass;
 
         [Inject]
         protected HttpClient HttpClient { get; set; }
 
-        protected async override Task OnInitAsync()
-        {
-            preCss = await theme.Pre.ToCss();
-            tagSymbolsCss = await theme.TagSymbols.ToCss();
-            tagNameCss = await theme.TagName.ToCss();
-            attributeNameCss = await theme.AttributeName.ToCss();
-            attributeValueCss = await theme.AttributeValue.ToCss();
-            textCss = await theme.Text.ToCss();
-            quotedStringCss = await theme.QuotedString.ToCss();
-            cshtmlKeywordCss = await theme.CSHtmlKeyword.ToCss();
+        [Inject]
+        protected IStyled Styled { get; set; }
 
-            var str = await HttpClient.GetStringAsync(CodeFile);
+        protected override async Task OnInitAsync()
+        {
+            string str = await HttpClient.GetStringAsync(CodeFile);
             Tokens = Tokenizer.Parse(str);
-            if (Debug) PrintToConsole();
-            isInitDone = true;
+            if (Debug)
+            {
+                PrintToConsole();
+            }
+
+            _preClass = await Styled.Css(_theme.Pre);
+            _tagSymbolsClass = await Styled.Css(_theme.TagSymbols);
+            _tagNameClass = await Styled.Css(_theme.TagName);
+            _attributeNameClass = await Styled.Css(_theme.AttributeName);
+            _attributeValueClass = await Styled.Css(_theme.AttributeValue);
+            _textClass = await Styled.Css(_theme.Text);
+            _quotedStringClass = await Styled.Css(_theme.QuotedString);
+            _cshtmlKeywordClass = await Styled.Css(_theme.CSHtmlKeyword);
+
+            _isInitDone = true;
         }
 
         private void PrintToConsole()
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
             sb.Append("ToHtml: ");
-            foreach (var token in Tokens)
+            foreach (IToken token in Tokens)
             {
                 sb.Append(token.ToHtml());
             }
             Console.WriteLine(sb.ToString());
         }
 
-        private int Next() => i++;
+        private int Next()
+        {
+            return i++;
+        }
 
         protected override void BuildRenderTree(RenderTreeBuilder builder)
         {
             base.BuildRenderTree(builder);
-            if (!isInitDone) return;
-            builder.OpenComponent<Dynamic>(Next());
-            builder.AddAttribute(Next(), "TagName", "pre");
-            builder.AddAttribute(Next(), "css", preCss);
-            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)(builderMain => BuildRenderMain(builderMain)));
-            builder.CloseComponent();
+            if (!_isInitDone)
+            {
+                return;
+            }
+
+            builder.OpenElement(Next(), "pre");
+            builder.AddAttribute(Next(), "class", _preClass);
+            builder.OpenElement(Next(), "code");
+            builder.AddContent(Next(), builderMain => BuildRenderMain(builderMain));
+            builder.CloseElement();
+            builder.CloseElement();
         }
 
         private void BuildRenderMain(RenderTreeBuilder builder)
         {
-            foreach (var token in Tokens)
+            foreach (IToken token in Tokens)
             {
                 switch (token.TokenType)
                 {
                     case TokenType.Text:
-                        var text = (Text)token;
-                        BuildRenderText(builder, text);
+                        BuildRenderText(builder, (Text)token);
                         break;
                     case TokenType.StartTag:
-                        var startTag = (StartTag)token;
-                        BuildRenderStartTag(builder, startTag);
+                        BuildRenderStartTag(builder, (StartTag)token);
                         break;
                     case TokenType.EndTag:
-                        var endTag = (EndTag)token;
-                        BuildRenderEndTag(builder, endTag);
+                        BuildRenderEndTag(builder, (EndTag)token);
+                        break;
+                    case TokenType.QuotedString:
+                        BuildRendeQuotedTag(builder, (QuotedString)token);
+                        break;
+                    case TokenType.CSLine:
+                        BuildRenderCSLine(builder, (CSLine)token);
+                        break;
+                    case TokenType.CSBlockStart:
+                        BuildRenderCSBlockStart(builder, (CSBlockStart)token);
+                        break;
+                    case TokenType.CSBlockEnd:
+                        BuildRenderCSBlockEnd(builder, (CSBlockEnd)token);
                         break;
                     default:
                         break;
@@ -100,206 +123,155 @@ namespace BlazorPrettyCode
             }
         }
 
-        private void BuildRenderText(RenderTreeBuilder builder, Text text, string css = null)
+        private void BuildRenderCSBlockEnd(RenderTreeBuilder builder, CSBlockEnd token)
         {
-            if (css == null) css = textCss;
-            if (text.Tokens.Count == 0)
-            {
-                builder.OpenComponent<Dynamic>(Next());
-                builder.AddAttribute(Next(), "TagName", "span");
-                builder.AddAttribute(Next(), "css", css);
-                builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
-                {
-                    builder2.AddContent(Next(), text.Content);
-                }));
-                builder.CloseComponent();
-            }
-            else
-            {
-                foreach(var token in text.Tokens)
-                {
-                    switch (token.TokenType)
-                    {
-                        case TokenType.Text:
-                            var innerText = (Text)token;
-                            BuildRenderText(builder, innerText);
-                            break;
-                        case TokenType.QuotedString:
-                            var quotedTag = (QuotedString)token;
-                            BuildRendeQuotedTag(builder, quotedTag);
-                            break;
-                        default:
-                            break;
-                    }
+            builder.OpenElement(Next(), "span");
+            builder.AddAttribute(Next(), "class", _cshtmlKeywordClass);
+            builder.AddContent(Next(), '}');
+            builder.CloseElement();
+        }
 
-                }
+        private void BuildRenderCSBlockStart(RenderTreeBuilder builder, CSBlockStart csBlockStart)
+        {
+            builder.OpenElement(Next(), "span");
+            builder.AddAttribute(Next(), "class", _cshtmlKeywordClass);
+            string functions = csBlockStart.IsFunctions ? "functions " : "";
+            builder.AddContent(Next(), "@" + functions);
+            if (csBlockStart.IsOpenBrace)
+            {
+                builder.AddContent(Next(), '{');
             }
+
+            builder.CloseElement();
         }
 
         private void BuildRendeQuotedTag(RenderTreeBuilder builder, QuotedString quotedTag)
         {
-            builder.OpenComponent<Dynamic>(Next());
-            builder.AddAttribute(Next(), "TagName", "span");
-            builder.AddAttribute(Next(), "css", quotedStringCss);
-            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
+            string quote = GetQuoteChar(quotedTag.QuoteMark);
+            builder.OpenElement(Next(), "span");
+            builder.AddAttribute(Next(), "class", _quotedStringClass);
+            builder.AddContent(Next(), quote);
+            builder.CloseElement();
+
+            if (quotedTag.IsCSStatement)
             {
-                var quote = GetQuoteChar(quotedTag.QuoteMark);
-                builder2.AddContent(Next(), quote + quotedTag.Content + quote);
-            }));
-            builder.CloseComponent();
+                builder.OpenElement(Next(), "span");
+                builder.AddAttribute(Next(), "class", _cshtmlKeywordClass);
+                builder.AddContent(Next(), '@');
+                if (quotedTag.HasParentheses)
+                {
+                    builder.AddContent(Next(), "(");
+                }
+
+                builder.CloseElement();
+            }
+
+            builder.OpenElement(Next(), "span");
+            builder.AddAttribute(Next(), "class", _quotedStringClass);
+            builder.AddContent(Next(), quotedTag.Content);
+            builder.CloseElement();
+
+            if (quotedTag.HasParentheses)
+            {
+                builder.OpenElement(Next(), "span");
+                builder.AddAttribute(Next(), "class", _cshtmlKeywordClass);
+                builder.AddContent(Next(), ')');
+                builder.CloseElement();
+            }
+
+            builder.OpenElement(Next(), "span");
+            builder.AddAttribute(Next(), "class", _quotedStringClass);
+            builder.AddContent(Next(), quote);
+            builder.CloseElement();
+        }
+
+        private void BuildRenderCSLine(RenderTreeBuilder builder, CSLine csLine)
+        {
+            builder.OpenElement(Next(), "span");
+            builder.AddAttribute(Next(), "class", _cshtmlKeywordClass);
+            string lineType = GetLineType(csLine.LineType);
+            builder.AddContent(Next(), "@" + lineType);
+            builder.CloseElement();
+
+            builder.OpenElement(Next(), "span");
+            builder.AddAttribute(Next(), "class", _textClass);
+            builder.AddContent(Next(), csLine.Line);
+            builder.CloseElement();
+        }
+
+        private void BuildRenderEndTag(RenderTreeBuilder builder, EndTag endTag)
+        {
+            builder.OpenElement(Next(), "span");
+            builder.AddAttribute(Next(), "class", _tagSymbolsClass);
+            builder.AddContent(Next(), "</");
+            builder.CloseElement();
+
+            builder.OpenElement(Next(), "span");
+            builder.AddAttribute(Next(), "class", _tagNameClass);
+            builder.AddContent(Next(), endTag.Name);
+            builder.CloseElement();
+
+            builder.OpenElement(Next(), "span");
+            builder.AddAttribute(Next(), "class", _tagSymbolsClass);
+            builder.AddContent(Next(), ">");
+            builder.CloseElement();
         }
 
         private void BuildRenderStartTag(RenderTreeBuilder builder, StartTag startTag)
         {
-            builder.OpenComponent<Dynamic>(Next());
-            builder.AddAttribute(Next(), "TagName", "span");
-            builder.AddAttribute(Next(), "css", tagSymbolsCss);
-            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
-            {
-                builder2.AddContent(Next(), "<");
-            }));
-            builder.CloseComponent();
+            builder.OpenElement(Next(), "span");
+            builder.AddAttribute(Next(), "class", _tagSymbolsClass);
+            builder.AddContent(Next(), "<");
+            builder.CloseElement();
 
-            builder.OpenComponent<Dynamic>(Next());
-            builder.AddAttribute(Next(), "TagName", "span");
-            builder.AddAttribute(Next(), "css", tagNameCss);
-            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
-            {
-                builder2.AddContent(Next(), startTag.Name);
-            }));
-            builder.CloseComponent();
+            builder.OpenElement(Next(), "span");
+            builder.AddAttribute(Next(), "class", _tagNameClass);
+            builder.AddContent(Next(), startTag.Name);
+            builder.CloseElement();
 
             BuildRenderAttributes(builder, startTag.Attributes);
 
-            if (startTag.IsSelfClosingTag)
+            builder.OpenElement(Next(), "span");
+            builder.AddAttribute(Next(), "class", _tagSymbolsClass);
+            if (startTag.IsSelfClosingTag && !startTag.IsGeneric)
             {
-                builder.OpenComponent<Dynamic>(Next());
-                builder.AddAttribute(Next(), "TagName", "span");
-                builder.AddAttribute(Next(), "css", tagSymbolsCss);
-                builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
-                {
-                    builder2.AddContent(Next(), " /");
-                }));
-                builder.CloseComponent();
+                builder.AddContent(Next(), " /");
             }
+            builder.AddContent(Next(), ">");
+            builder.CloseElement();
+        }
 
-            builder.OpenComponent<Dynamic>(Next());
-            builder.AddAttribute(Next(), "TagName", "span");
-            builder.AddAttribute(Next(), "css", tagSymbolsCss);
-            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
-            {
-                builder2.AddContent(Next(), ">");
-            }));
-            builder.CloseComponent();
+        private void BuildRenderText(RenderTreeBuilder builder, Text text)
+        {
+            builder.OpenElement(Next(), "span");
+            builder.AddAttribute(Next(), "class", _textClass);
+            builder.AddContent(Next(), text.Content);
+            builder.CloseElement();
         }
 
         private void BuildRenderAttributes(RenderTreeBuilder builder, List<IToken> attributes)
         {
-            foreach (var token in attributes)
+            foreach (IToken token in attributes)
             {
-                switch (token.TokenType)
-                {
-                    case TokenType.AttributeName:
-                        var attributeName = (AttributeName)token;
-                        BuildRenderAttributeName(builder, attributeName);
-                        break;
-                    case TokenType.AttributeValue:
-                        var attributeValue = (AttributeValue)token;
-                        BuildRenderAttributeValue(builder, attributeValue);
-                        break;
-                    default:
-                        break;
-                }
+                BuildRenderAttribute(builder, (AttributeToken)token);
             }
         }
 
-        private void BuildRenderAttributeValue(RenderTreeBuilder builder, AttributeValue attributeValue)
+        private void BuildRenderAttribute(RenderTreeBuilder builder, AttributeToken attribute)
         {
-            builder.OpenComponent<Dynamic>(Next());
-            builder.AddAttribute(Next(), "TagName", "span");
-            builder.AddAttribute(Next(), "css", attributeValueCss);
-            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
-            {
-                var quote = GetQuoteChar(attributeValue.QuoteMark);
-                builder2.AddContent(Next(), "=" + quote);
-            }));
-            builder.CloseComponent();
+            builder.OpenElement(Next(), "span");
+            builder.AddAttribute(Next(), "class", _attributeNameClass);
+            builder.AddContent(Next(), " " + attribute.Name);
+            builder.CloseElement();
 
-            if (attributeValue.Tokens.Count == 0)
+            if (!attribute.NameOnly)
             {
-                builder.OpenComponent<Dynamic>(Next());
-                builder.AddAttribute(Next(), "TagName", "span");
-                builder.AddAttribute(Next(), "css", attributeValueCss);
-                builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
-                {
-                    builder2.AddContent(Next(), attributeValue.Value);
-                }));
-                builder.CloseComponent();
-            }
-            else
-            {
-                foreach(var token in attributeValue.Tokens)
-                {
-                    switch (token.TokenType)
-                    {
-                        case TokenType.Text:
-                            var innerText = (Text)token;
-                            BuildRenderText(builder, innerText, attributeValueCss);
-                            break;
-                        case TokenType.AttributeValueStatement:
-                            var attributeValueStatement = (AttributeValueStatement)token;
-                            BuildRendeAttributeValueStatement(builder, attributeValueStatement);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-            builder.OpenComponent<Dynamic>(Next());
-            builder.AddAttribute(Next(), "TagName", "span");
-            builder.AddAttribute(Next(), "css", attributeValueCss);
-            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
-            {
-                var quote = GetQuoteChar(attributeValue.QuoteMark);
-                builder2.AddContent(Next(), quote);
-            }));
-            builder.CloseComponent();
-        }
+                builder.OpenElement(Next(), "span");
+                builder.AddAttribute(Next(), "class", _attributeValueClass);
+                builder.AddContent(Next(), "=");
+                builder.CloseElement();
 
-        private void BuildRendeAttributeValueStatement(RenderTreeBuilder builder, AttributeValueStatement attributeValueStatement)
-        {
-            builder.OpenComponent<Dynamic>(Next());
-            builder.AddAttribute(Next(), "TagName", "span");
-            builder.AddAttribute(Next(), "css", cshtmlKeywordCss);
-            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
-            {
-                var parens = attributeValueStatement.HasParentheses ? "(" : "";
-                builder2.AddContent(Next(), "@" + parens);
-                
-            }));
-            builder.CloseComponent();
-
-            builder.OpenComponent<Dynamic>(Next());
-            builder.AddAttribute(Next(), "TagName", "span");
-            builder.AddAttribute(Next(), "css", attributeValueCss);
-            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
-            {
-                builder2.AddContent(Next(), attributeValueStatement.Content);
-
-            }));
-            builder.CloseComponent();
-
-            if(attributeValueStatement.HasParentheses)
-            {
-                builder.OpenComponent<Dynamic>(Next());
-                builder.AddAttribute(Next(), "TagName", "span");
-                builder.AddAttribute(Next(), "css", cshtmlKeywordCss);
-                builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
-                {
-                    builder2.AddContent(Next(), ")");
-
-                }));
-                builder.CloseComponent();
+                BuildRendeQuotedTag(builder, attribute.Value);
             }
         }
 
@@ -318,43 +290,29 @@ namespace BlazorPrettyCode
             }
         }
 
-        private void BuildRenderAttributeName(RenderTreeBuilder builder, AttributeName attributeName)
+        private string GetLineType(CSLineType lineType)
         {
-            builder.OpenComponent<Dynamic>(Next());
-            builder.AddAttribute(Next(), "TagName", "span");
-            builder.AddAttribute(Next(), "css", attributeNameCss);
-            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) =>
+            switch (lineType)
             {
-                builder2.AddContent(Next(), " " +attributeName.Name);
-            }));
-            builder.CloseComponent();
+                case CSLineType.AddTagHelper:
+                    return "addTagHelper";
+                case CSLineType.Implements:
+                    return "implements";
+                case CSLineType.Inherit:
+                    return "inherit";
+                case CSLineType.Inject:
+                    return "inject";
+                case CSLineType.Layout:
+                    return "layout";
+                case CSLineType.Page:
+                    return "page";
+                case CSLineType.Using:
+                    return "using";
+                default:
+                    return "";
+            }
+
         }
 
-        private void BuildRenderEndTag(RenderTreeBuilder builder, EndTag endTag)
-        {
-            builder.OpenComponent<Dynamic>(Next());
-            builder.AddAttribute(Next(), "TagName", "span");
-            builder.AddAttribute(Next(), "css", tagSymbolsCss);
-            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) => {
-                builder2.AddContent(Next(), "</");
-            }));
-            builder.CloseComponent();
-
-            builder.OpenComponent<Dynamic>(Next());
-            builder.AddAttribute(Next(), "TagName", "span");
-            builder.AddAttribute(Next(), "css", tagNameCss);
-            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) => {
-                builder2.AddContent(Next(), endTag.Name);
-            }));
-            builder.CloseComponent();
-
-            builder.OpenComponent<Dynamic>(Next());
-            builder.AddAttribute(Next(), "TagName", "span");
-            builder.AddAttribute(Next(), "css", tagSymbolsCss);
-            builder.AddAttribute(Next(), "ChildContent", (RenderFragment)((builder2) => {
-                builder2.AddContent(Next(), ">");
-            }));
-            builder.CloseComponent();
-        }
     }
 }
