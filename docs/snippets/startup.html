@@ -1,0 +1,9 @@
+﻿public void ConfigureServices(IServiceCollection services)
+{
+    services.AddBlazorPrettyCode(defaultSettings =>
+    {
+        defaultSettings.DefaultTheme = new VisualStudioSolarizedLight();
+        defaultSettings.IsDevelopmentMode = true;
+        defaultSettings.ShowLineNumbers = true;
+    });
+}
