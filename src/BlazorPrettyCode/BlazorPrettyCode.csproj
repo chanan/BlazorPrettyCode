@@ -10,10 +10,17 @@
     <LangVersion>7.3</LangVersion>
     <RazorLangVersion>3.0</RazorLangVersion>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <PackageId>BlazorPrettyCode</PackageId>
+    <Version>1.0.0-preview4-01</Version>
+    <Authors>Chanan Braunstein</Authors>
+    <Title>Blazor PrettyCode</Title>
+    <Description>Razor Code Display Component</Description>
+    <PackageTags>blazor;css;styled-components</PackageTags>
+    <RepositoryUrl>https://github.com/chanan/BlazorPrettyCode</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CSHTMLTokenizer" Version="0.4.1" />
+    <PackageReference Include="CSHTMLTokenizer" Version="0.6.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Browser" Version="3.0.0-preview5-19227-01" />
     <PackageReference Include="BlazorStyled" Version="1.0.0-preview4-01" />
   </ItemGroup>

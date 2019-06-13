@@ -1,6 +1,8 @@
 using BlazorPrettyCode;
+using BlazorStyled;
 using Microsoft.AspNetCore.Components.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Polished;
 
 namespace Sample
 {
@@ -8,7 +10,10 @@ namespace Sample
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddBlazorPrettyCode(true);
+            services.AddBlazorPrettyCode();
+            services.AddBlazorStyled();
+            services.AddSingleton<IMixins, Mixins>();
+            services.AddSingleton<IShorthand, Shorthand>();
         }
 
         public void Configure(IComponentsApplicationBuilder app)

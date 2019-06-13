@@ -1,11 +1,19 @@
 @inherits LayoutComponentBase
+@inject IStyled Styled
+@inject IMixins Mixins
 
-<div class="sidebar">
-    <NavMenu />
+<div class="@main">
+    @Body
 </div>
 
-<div class="main">
-    <div class="content px-4">
-        @Body
-    </div>
-</div>
+@functions {
+    private string main;
+
+    protected override async Task OnInitAsync()
+    {
+        main = await Styled.Css(@"
+            max-width: 1200px;
+            margin: 0 auto;
+        ");
+    }
+}

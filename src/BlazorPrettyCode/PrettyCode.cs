@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.RenderTree;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,57 +15,153 @@ namespace BlazorPrettyCode
 {
     public class PrettyCode : ComponentBase
     {
-        [Parameter] private bool Debug { get; set; }
+        [Parameter] private bool? Debug { get; set; } = null;
         [Parameter] private string CodeFile { get; set; }
+        [Parameter] private ITheme Theme { get; set; }
+        [Parameter] private bool? ShowLineNumbers { get; set; } = null;
 
-        private List<IToken> Tokens { get; set; } = new List<IToken>();
+        private List<Line> Lines { get; set; } = new List<Line>();
         private bool _isInitDone = false;
         private int i = 0;
 
-        private readonly ICodeTheme _theme = new PrettyCodeDefault();
-        private string _preClass;
-        private string _tagSymbolsClass;
-        private string _tagNameClass;
-        private string _attributeNameClass;
-        private string _attributeValueClass;
-        private string _textClass;
-        private string _quotedStringClass;
-        private string _cshtmlKeywordClass;
+        //Theme css
+        private string _themePreClass;
+        private string _themeTagSymbolsClass;
+        private string _themeTagNameClass;
+        private string _themeAttributeNameClass;
+        private string _themeAttributeValueClass;
+        private string _themeQuotedStringClass;
+        private string _themeRazorKeywordClass;
 
-        [Inject]
-        protected HttpClient HttpClient { get; set; }
+        //Non Theme css
+        private string _basePreClass;
+        private string _baseRowSpan;
+        private string _baseLineNumbersCell;
+        private string _baseCodeCell;
 
-        [Inject]
-        protected IStyled Styled { get; set; }
+        private bool _showLineNumbers;
+
+        [Inject] protected HttpClient HttpClient { get; set; }
+        [Inject] protected IStyled Styled { get; set; }
+        [Inject] protected DefaultSettings DefaultConfig { get; set; }
 
         protected override async Task OnInitAsync()
         {
+            bool debug = Debug ?? DefaultConfig.IsDevelopmentMode;
             string str = await HttpClient.GetStringAsync(CodeFile);
-            Tokens = Tokenizer.Parse(str);
-            if (Debug)
+            Lines = Tokenizer.Parse(str);
+            if (debug)
             {
                 PrintToConsole();
             }
 
-            _preClass = await Styled.Css(_theme.Pre);
-            _tagSymbolsClass = await Styled.Css(_theme.TagSymbols);
-            _tagNameClass = await Styled.Css(_theme.TagName);
-            _attributeNameClass = await Styled.Css(_theme.AttributeName);
-            _attributeValueClass = await Styled.Css(_theme.AttributeValue);
-            _textClass = await Styled.Css(_theme.Text);
-            _quotedStringClass = await Styled.Css(_theme.QuotedString);
-            _cshtmlKeywordClass = await Styled.Css(_theme.CSHtmlKeyword);
+            _basePreClass = await Styled.Css(@"
+                display: table;
+                table-layout: fixed;
+                width: 100%; /* anything but auto, otherwise fixed layout not guaranteed */
+                white-space: pre-wrap;
+                &:before {
+                    counter-reset: linenum;
+                }
+            ");
+
+            _baseRowSpan = await Styled.Css(@"
+                display: table-row;
+                counter-increment: linenum;
+            ");
+
+            _baseLineNumbersCell = await Styled.Css(@"
+                display: table-cell;
+                user-select: none;
+                -moz-user-select: none;
+                -webkit-user-select: none;
+                width: 4em;
+                border-right-style: solid;
+                border-right-width: 1px;
+                border-right-color: rgb(223, 225, 230);
+                &:before {
+                    content: counter(linenum) '.';
+                    text-align: right;
+                    display: block;
+                }
+            ");
+
+            _baseCodeCell = await Styled.Css(@"
+                display: table-cell;
+                padding-left: 1em;
+            ");
+
+            ITheme theme = Theme ?? DefaultConfig.DefaultTheme;
+            _showLineNumbers = ShowLineNumbers ?? DefaultConfig.ShowLineNumbers;
+
+            /*foreach (string font in theme.Fonts)
+            {
+                await Styled.Fontface(font);
+            }*/
+
+            _themePreClass = await Styled.Css(getThemeValues(theme));
+            _themeTagSymbolsClass = await Styled.Css(getThemeValues(theme, "Tag start/end"));
+            _themeTagNameClass = await Styled.Css(getThemeValues(theme, "Tag name"));
+            _themeAttributeNameClass = await Styled.Css(getThemeValues(theme, "Attribute name"));
+            _themeAttributeValueClass = await Styled.Css(getThemeValues(theme, "Attribute value"));
+            _themeQuotedStringClass = await Styled.Css(getThemeValues(theme, "String"));
+            _themeRazorKeywordClass = await Styled.Css(getThemeValues(theme, "Razor Keyword"));
 
             _isInitDone = true;
+        }
+
+        private string getThemeValues(ITheme theme, string setting = null)
+        {
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+            ISetting settings = (from s in theme.Settings
+                                 where s.Name == null
+                                 select s).SingleOrDefault();
+
+            if (settings != null)
+            {
+                foreach (KeyValuePair<string, string> kvp in settings.Settings)
+                {
+                    dictionary.Add(kvp.Key.ToLower(), kvp.Value);
+                }
+            }
+
+            if (setting != null)
+            {
+                settings = (from s in theme.Settings
+                            where s.Name != null && s.Name.ToLower() == setting.ToLower()
+                            select s).SingleOrDefault();
+
+                if (settings != null)
+                {
+                    foreach (KeyValuePair<string, string> kvp in settings.Settings)
+                    {
+                        if (!dictionary.ContainsKey(kvp.Key.ToLower()))
+                        {
+                            dictionary.Add(kvp.Key.ToLower(), kvp.Value);
+                        }
+                        else
+                        {
+                            dictionary[kvp.Key.ToLower()] = kvp.Value;
+                        }
+                    }
+                }
+            }
+
+            StringBuilder sb = new StringBuilder();
+            foreach (KeyValuePair<string, string> kvp in dictionary)
+            {
+                sb.Append(kvp.Key).Append(':').Append(kvp.Value).Append(';');
+            }
+            return sb.ToString();
         }
 
         private void PrintToConsole()
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("ToHtml: ");
-            foreach (IToken token in Tokens)
+            foreach (Line line in Lines)
             {
-                sb.Append(token.ToHtml());
+                sb.Append(line.ToHtml());
             }
             Console.WriteLine(sb.ToString());
         }
@@ -83,16 +180,39 @@ namespace BlazorPrettyCode
             }
 
             builder.OpenElement(Next(), "pre");
-            builder.AddAttribute(Next(), "class", _preClass);
-            builder.OpenElement(Next(), "code");
-            builder.AddContent(Next(), builderMain => BuildRenderMain(builderMain));
-            builder.CloseElement();
+            builder.AddAttribute(Next(), "class", _basePreClass + " " + _themePreClass);
+            foreach (Line line in Lines)
+            {
+                builder.AddContent(Next(), builderLine => BuildRenderLine(builderLine, line));
+            }
             builder.CloseElement();
         }
 
-        private void BuildRenderMain(RenderTreeBuilder builder)
+        private void BuildRenderLine(RenderTreeBuilder builderLine, Line line)
         {
-            foreach (IToken token in Tokens)
+            builderLine.OpenElement(Next(), "span");
+            builderLine.AddAttribute(Next(), "class", _baseRowSpan);
+            if (_showLineNumbers)
+            {
+                builderLine.OpenElement(Next(), "span");
+                builderLine.AddAttribute(Next(), "class", _baseLineNumbersCell);
+                builderLine.CloseElement();
+            }
+            builderLine.OpenElement(Next(), "code");
+            builderLine.AddAttribute(Next(), "class", _baseCodeCell);
+            builderLine.AddContent(Next(), builderMain => BuildRenderMain(builderMain, line));
+            if (!line.LastLine)
+            {
+                builderLine.AddContent(Next(), System.Environment.NewLine);
+            }
+
+            builderLine.CloseElement();
+            builderLine.CloseElement();
+        }
+
+        private void BuildRenderMain(RenderTreeBuilder builder, Line line)
+        {
+            foreach (IToken token in line.Tokens)
             {
                 switch (token.TokenType)
                 {
@@ -126,7 +246,7 @@ namespace BlazorPrettyCode
         private void BuildRenderCSBlockEnd(RenderTreeBuilder builder, CSBlockEnd token)
         {
             builder.OpenElement(Next(), "span");
-            builder.AddAttribute(Next(), "class", _cshtmlKeywordClass);
+            builder.AddAttribute(Next(), "class", _themeRazorKeywordClass);
             builder.AddContent(Next(), '}');
             builder.CloseElement();
         }
@@ -134,7 +254,7 @@ namespace BlazorPrettyCode
         private void BuildRenderCSBlockStart(RenderTreeBuilder builder, CSBlockStart csBlockStart)
         {
             builder.OpenElement(Next(), "span");
-            builder.AddAttribute(Next(), "class", _cshtmlKeywordClass);
+            builder.AddAttribute(Next(), "class", _themeRazorKeywordClass);
             string functions = csBlockStart.IsFunctions ? "functions " : "";
             builder.AddContent(Next(), "@" + functions);
             if (csBlockStart.IsOpenBrace)
@@ -149,14 +269,14 @@ namespace BlazorPrettyCode
         {
             string quote = GetQuoteChar(quotedTag.QuoteMark);
             builder.OpenElement(Next(), "span");
-            builder.AddAttribute(Next(), "class", _quotedStringClass);
+            builder.AddAttribute(Next(), "class", _themeQuotedStringClass);
             builder.AddContent(Next(), quote);
             builder.CloseElement();
 
             if (quotedTag.IsCSStatement)
             {
                 builder.OpenElement(Next(), "span");
-                builder.AddAttribute(Next(), "class", _cshtmlKeywordClass);
+                builder.AddAttribute(Next(), "class", _themeRazorKeywordClass);
                 builder.AddContent(Next(), '@');
                 if (quotedTag.HasParentheses)
                 {
@@ -167,20 +287,20 @@ namespace BlazorPrettyCode
             }
 
             builder.OpenElement(Next(), "span");
-            builder.AddAttribute(Next(), "class", _quotedStringClass);
+            builder.AddAttribute(Next(), "class", _themeQuotedStringClass);
             builder.AddContent(Next(), quotedTag.Content);
             builder.CloseElement();
 
             if (quotedTag.HasParentheses)
             {
                 builder.OpenElement(Next(), "span");
-                builder.AddAttribute(Next(), "class", _cshtmlKeywordClass);
+                builder.AddAttribute(Next(), "class", _themeRazorKeywordClass);
                 builder.AddContent(Next(), ')');
                 builder.CloseElement();
             }
 
             builder.OpenElement(Next(), "span");
-            builder.AddAttribute(Next(), "class", _quotedStringClass);
+            builder.AddAttribute(Next(), "class", _themeQuotedStringClass);
             builder.AddContent(Next(), quote);
             builder.CloseElement();
         }
@@ -188,13 +308,13 @@ namespace BlazorPrettyCode
         private void BuildRenderCSLine(RenderTreeBuilder builder, CSLine csLine)
         {
             builder.OpenElement(Next(), "span");
-            builder.AddAttribute(Next(), "class", _cshtmlKeywordClass);
+            builder.AddAttribute(Next(), "class", _themeRazorKeywordClass);
             string lineType = GetLineType(csLine.LineType);
             builder.AddContent(Next(), "@" + lineType);
             builder.CloseElement();
 
             builder.OpenElement(Next(), "span");
-            builder.AddAttribute(Next(), "class", _textClass);
+            //builder.AddAttribute(Next(), "class", _textClass);
             builder.AddContent(Next(), csLine.Line);
             builder.CloseElement();
         }
@@ -202,49 +322,59 @@ namespace BlazorPrettyCode
         private void BuildRenderEndTag(RenderTreeBuilder builder, EndTag endTag)
         {
             builder.OpenElement(Next(), "span");
-            builder.AddAttribute(Next(), "class", _tagSymbolsClass);
+            builder.AddAttribute(Next(), "class", _themeTagSymbolsClass);
             builder.AddContent(Next(), "</");
             builder.CloseElement();
 
             builder.OpenElement(Next(), "span");
-            builder.AddAttribute(Next(), "class", _tagNameClass);
+            builder.AddAttribute(Next(), "class", _themeTagNameClass);
             builder.AddContent(Next(), endTag.Name);
             builder.CloseElement();
 
             builder.OpenElement(Next(), "span");
-            builder.AddAttribute(Next(), "class", _tagSymbolsClass);
+            builder.AddAttribute(Next(), "class", _themeTagSymbolsClass);
             builder.AddContent(Next(), ">");
             builder.CloseElement();
         }
 
         private void BuildRenderStartTag(RenderTreeBuilder builder, StartTag startTag)
         {
-            builder.OpenElement(Next(), "span");
-            builder.AddAttribute(Next(), "class", _tagSymbolsClass);
-            builder.AddContent(Next(), "<");
-            builder.CloseElement();
+            if (startTag.LineType == TagLineType.SingleLine || startTag.LineType == TagLineType.MultiLineStart)
+            {
+                builder.OpenElement(Next(), "span");
+                builder.AddAttribute(Next(), "class", _themeTagSymbolsClass);
+                builder.AddContent(Next(), "<");
+                builder.CloseElement();
 
-            builder.OpenElement(Next(), "span");
-            builder.AddAttribute(Next(), "class", _tagNameClass);
-            builder.AddContent(Next(), startTag.Name);
-            builder.CloseElement();
+                builder.OpenElement(Next(), "span");
+                builder.AddAttribute(Next(), "class", _themeTagNameClass);
+                builder.AddContent(Next(), startTag.Name);
+                builder.CloseElement();
+            }
 
             BuildRenderAttributes(builder, startTag.Attributes);
 
-            builder.OpenElement(Next(), "span");
-            builder.AddAttribute(Next(), "class", _tagSymbolsClass);
-            if (startTag.IsSelfClosingTag && !startTag.IsGeneric)
+
+            if (startTag.LineType == TagLineType.SingleLine || startTag.LineType == TagLineType.MultiLineEnd)
             {
-                builder.AddContent(Next(), " /");
+                builder.OpenElement(Next(), "span");
+                builder.AddAttribute(Next(), "class", _themeTagSymbolsClass);
+                if (startTag.IsSelfClosingTag && !startTag.IsGeneric)
+                {
+                    string spacer =
+                        (startTag.LineType == TagLineType.MultiLineEnd && startTag.Attributes.Count == 0)
+                        ? string.Empty : " ";
+                    builder.AddContent(Next(), spacer + "/");
+                }
+                builder.AddContent(Next(), ">");
+                builder.CloseElement();
             }
-            builder.AddContent(Next(), ">");
-            builder.CloseElement();
         }
 
         private void BuildRenderText(RenderTreeBuilder builder, Text text)
         {
             builder.OpenElement(Next(), "span");
-            builder.AddAttribute(Next(), "class", _textClass);
+            //builder.AddAttribute(Next(), "class", _textClass);
             builder.AddContent(Next(), text.Content);
             builder.CloseElement();
         }
@@ -253,21 +383,31 @@ namespace BlazorPrettyCode
         {
             foreach (IToken token in attributes)
             {
-                BuildRenderAttribute(builder, (AttributeToken)token);
+                switch (token.TokenType)
+                {
+                    case TokenType.Text:
+                        BuildRenderText(builder, (Text)token);
+                        break;
+                    case TokenType.Attribute:
+                        BuildRenderAttribute(builder, (AttributeToken)token);
+                        break;
+                    default:
+                        break;
+                }
             }
         }
 
         private void BuildRenderAttribute(RenderTreeBuilder builder, AttributeToken attribute)
         {
             builder.OpenElement(Next(), "span");
-            builder.AddAttribute(Next(), "class", _attributeNameClass);
+            builder.AddAttribute(Next(), "class", _themeAttributeNameClass);
             builder.AddContent(Next(), " " + attribute.Name);
             builder.CloseElement();
 
             if (!attribute.NameOnly)
             {
                 builder.OpenElement(Next(), "span");
-                builder.AddAttribute(Next(), "class", _attributeValueClass);
+                builder.AddAttribute(Next(), "class", _themeAttributeValueClass);
                 builder.AddContent(Next(), "=");
                 builder.CloseElement();
 

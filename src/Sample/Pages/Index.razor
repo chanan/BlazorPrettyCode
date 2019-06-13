@@ -9,39 +9,58 @@
 <h2>Features</h2>
 
 <ul>
-    <li>Format and display HTML</li>
-    <li>Format and display CSHTML (not done)</li>
-    <li>Theme support (in progress)</li>
-    <li>Line numbering (not done)</li>
-    <li>Copy button (not done)</li>
-    <li>Collapse (not done)</li>
+    <li>Format and display of HTML</li>
+    <li>Basic formating and display of Razor files</li>
+    <li>Theme support</li>
+    <li>Line numbering</li>
+</ul>
+
+<h2>Coming soon</h2>
+
+<ul>
+    <li>Enhanced support for C# code</li>
+    <li>Themes in JSON files</li>
+    <li>Collapse/Exapnd of code blocks</li>
+    <li>Row highlighting</li>
 </ul>
 
 <h2>Dependent projects</h2>
 <ul>
-    <li><a href="https://github.com/chanan/CSHTMLTokenizer">CSHTMLTokenizer</a> is used to convert CSHTML into tokens for display</li>
-    <li><a href="https://chanan.github.io/Blazorous/">Blazorous</a> is used to create the pretty code and theming</li>
+    <li><a href="https://github.com/chanan/CSHTMLTokenizer">CSHTMLTokenizer</a> is used to convert Razor syntax into tokens</li>
+    <li><a href="https://chanan.github.io/BlazorStyled/">BlazorStyled</a> is used to create the pretty code and theming</li>
 </ul>
+
+<h2>Usage</h2>
 
 <h2>Demo</h2>
 
 <PrettyCode CodeFile="snippets/demo.html" />
 
-<h2>CSHtml</h2>
+<h3>Razor Syntax</h3>
 
-<h3>CSHtml in Attributes</h3>
+<h4>Razor in Attributes</h4>
 
 <PrettyCode CodeFile="snippets/demoAttributes.html" />
 
-<h3>CSHtml Snippets</h3>
-
-<p>Work in progress!</p>
+<h4>Razor Snippets</h4>
 
 <PrettyCode CodeFile="snippets/demoSnippet.html" />
 
+<h2>Line Numbers</h2>
+
+<p>Line numbers can be turned on and off globally or on a per basis on the componenet level:</p>
+
+<PrettyCode CodeFile="snippets/demo.html" ShowLineNumbers="false" />
+
 <h2>Themes</h2>
 
-<p>In progress (In the snippet above you an see that it is rendered using Fira Code, look at the => symbol)</p>
+<p>
+    Themes are defined as classes that implements <code>BlazorPrettyCode.Themes.ICodeThemes</code> and default to <code>BlazorPrettyCode.Themes.PrettyCodeDefault</code> which can be
+    overridden by passing class to Theme attribute of <code>PrettyCode</code>. In the future themes will also be able to be defiened in json. Below is a PrettyCode block using the theme
+    <code>VisualStudioSolarizedLight</code>:
+</p>
+
+<PrettyCode CodeFile="snippets/usingThemes.html" Theme="@(new BlazorPrettyCode.Themes.VisualStudioSolarizedLight())" />
 
 <div class="text-center">
     <a href="https://github.com/chanan/BlazorPrettyCode"><img src="https://img.shields.io/github/stars/chanan/BlazorPrettyCode.svg?style=social&label=Stars" /></a>
