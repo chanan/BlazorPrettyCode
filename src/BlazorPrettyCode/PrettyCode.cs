@@ -255,7 +255,7 @@ namespace BlazorPrettyCode
         {
             builder.OpenElement(Next(), "span");
             builder.AddAttribute(Next(), "class", _themeRazorKeywordClass);
-            string functions = csBlockStart.IsFunctions ? "functions " : "";
+            string functions = csBlockStart.IsFunctions ? csBlockStart.IsCode ? "code " : "functions " : "";
             builder.AddContent(Next(), "@" + functions);
             if (csBlockStart.IsOpenBrace)
             {
@@ -430,6 +430,8 @@ namespace BlazorPrettyCode
             }
         }
 
+
+        //Replace with Enum string value ToLowerFirstChar()
         private string GetLineType(CSLineType lineType)
         {
             switch (lineType)
@@ -448,6 +450,10 @@ namespace BlazorPrettyCode
                     return "page";
                 case CSLineType.Using:
                     return "using";
+                case CSLineType.Attribute:
+                    return "attribute";
+                case CSLineType.Namespace:
+                    return "namespace";
                 default:
                     return "";
             }
