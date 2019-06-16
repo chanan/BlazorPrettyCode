@@ -268,22 +268,26 @@ namespace BlazorPrettyCode
         private void BuildRendeQuotedTag(RenderTreeBuilder builder, QuotedString quotedTag)
         {
             string quote = GetQuoteChar(quotedTag.QuoteMark);
-            builder.OpenElement(Next(), "span");
-            builder.AddAttribute(Next(), "class", _themeQuotedStringClass);
-            builder.AddContent(Next(), quote);
-            builder.CloseElement();
-
-            if (quotedTag.IsCSStatement)
+            if (quotedTag.LineType == LineType.SingleLine || quotedTag.LineType == LineType.MultiLineStart)
             {
                 builder.OpenElement(Next(), "span");
-                builder.AddAttribute(Next(), "class", _themeRazorKeywordClass);
-                builder.AddContent(Next(), '@');
-                if (quotedTag.HasParentheses)
-                {
-                    builder.AddContent(Next(), "(");
-                }
-
+                builder.AddAttribute(Next(), "class", _themeQuotedStringClass);
+                builder.AddContent(Next(), quote);
                 builder.CloseElement();
+
+
+                if (quotedTag.IsCSStatement)
+                {
+                    builder.OpenElement(Next(), "span");
+                    builder.AddAttribute(Next(), "class", _themeRazorKeywordClass);
+                    builder.AddContent(Next(), '@');
+                    if (quotedTag.HasParentheses)
+                    {
+                        builder.AddContent(Next(), "(");
+                    }
+
+                    builder.CloseElement();
+                }
             }
 
             builder.OpenElement(Next(), "span");
@@ -291,18 +295,21 @@ namespace BlazorPrettyCode
             builder.AddContent(Next(), quotedTag.Content);
             builder.CloseElement();
 
-            if (quotedTag.HasParentheses)
+            if (quotedTag.LineType == LineType.SingleLine || quotedTag.LineType == LineType.MultiLineEnd)
             {
+                if (quotedTag.HasParentheses)
+                {
+                    builder.OpenElement(Next(), "span");
+                    builder.AddAttribute(Next(), "class", _themeRazorKeywordClass);
+                    builder.AddContent(Next(), ')');
+                    builder.CloseElement();
+                }
+
                 builder.OpenElement(Next(), "span");
-                builder.AddAttribute(Next(), "class", _themeRazorKeywordClass);
-                builder.AddContent(Next(), ')');
+                builder.AddAttribute(Next(), "class", _themeQuotedStringClass);
+                builder.AddContent(Next(), quote);
                 builder.CloseElement();
             }
-
-            builder.OpenElement(Next(), "span");
-            builder.AddAttribute(Next(), "class", _themeQuotedStringClass);
-            builder.AddContent(Next(), quote);
-            builder.CloseElement();
         }
 
         private void BuildRenderCSLine(RenderTreeBuilder builder, CSLine csLine)
@@ -339,7 +346,7 @@ namespace BlazorPrettyCode
 
         private void BuildRenderStartTag(RenderTreeBuilder builder, StartTag startTag)
         {
-            if (startTag.LineType == TagLineType.SingleLine || startTag.LineType == TagLineType.MultiLineStart)
+            if (startTag.LineType == LineType.SingleLine || startTag.LineType == LineType.MultiLineStart)
             {
                 builder.OpenElement(Next(), "span");
                 builder.AddAttribute(Next(), "class", _themeTagSymbolsClass);
@@ -355,14 +362,14 @@ namespace BlazorPrettyCode
             BuildRenderAttributes(builder, startTag.Attributes);
 
 
-            if (startTag.LineType == TagLineType.SingleLine || startTag.LineType == TagLineType.MultiLineEnd)
+            if (startTag.LineType == LineType.SingleLine || startTag.LineType == LineType.MultiLineEnd)
             {
                 builder.OpenElement(Next(), "span");
                 builder.AddAttribute(Next(), "class", _themeTagSymbolsClass);
                 if (startTag.IsSelfClosingTag && !startTag.IsGeneric)
                 {
                     string spacer =
-                        (startTag.LineType == TagLineType.MultiLineEnd && startTag.Attributes.Count == 0)
+                        (startTag.LineType == LineType.MultiLineEnd && startTag.Attributes.Count == 0)
                         ? string.Empty : " ";
                     builder.AddContent(Next(), spacer + "/");
                 }
