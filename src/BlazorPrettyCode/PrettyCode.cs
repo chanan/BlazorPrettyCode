@@ -32,6 +32,7 @@ namespace BlazorPrettyCode
         private string _themeAttributeValueClass;
         private string _themeQuotedStringClass;
         private string _themeRazorKeywordClass;
+        private string _themeTextClass;
 
         //Non Theme css
         private string _basePreClass;
@@ -94,10 +95,10 @@ namespace BlazorPrettyCode
             ITheme theme = Theme ?? DefaultConfig.DefaultTheme;
             _showLineNumbers = ShowLineNumbers ?? DefaultConfig.ShowLineNumbers;
 
-            /*foreach (string font in theme.Fonts)
+            foreach (string font in getFonts(theme))
             {
                 await Styled.Fontface(font);
-            }*/
+            }
 
             _themePreClass = await Styled.Css(getThemeValues(theme));
             _themeTagSymbolsClass = await Styled.Css(getThemeValues(theme, "Tag start/end"));
@@ -106,8 +107,29 @@ namespace BlazorPrettyCode
             _themeAttributeValueClass = await Styled.Css(getThemeValues(theme, "Attribute value"));
             _themeQuotedStringClass = await Styled.Css(getThemeValues(theme, "String"));
             _themeRazorKeywordClass = await Styled.Css(getThemeValues(theme, "Razor Keyword"));
+            _themeTextClass = await Styled.Css(getThemeValues(theme, "Text"));
 
             _isInitDone = true;
+        }
+
+        private List<string> getFonts(ITheme theme)
+        {
+            List<string> list = new List<string>();
+            List<ISetting> fonts = (from s in theme.Settings
+                                    where s.Name != null && s.Name.ToLower() == "font"
+                                    select s).ToList();
+
+            foreach(ISetting font in fonts)
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (KeyValuePair<string, string> kvp in font.Settings)
+                {
+                    sb.Append(kvp.Key).Append(':').Append(kvp.Value).Append(';');
+                }
+                list.Add(sb.ToString());
+            }
+
+            return list;
         }
 
         private string getThemeValues(ITheme theme, string setting = null)
@@ -270,6 +292,14 @@ namespace BlazorPrettyCode
             string quote = GetQuoteChar(quotedTag.QuoteMark);
             if (quotedTag.LineType == LineType.SingleLine || quotedTag.LineType == LineType.MultiLineStart)
             {
+                if(quotedTag.IsMultiLineStatement)
+                {
+                    builder.OpenElement(Next(), "span");
+                    builder.AddAttribute(Next(), "class", _themeQuotedStringClass);
+                    builder.AddContent(Next(), '@');
+                    builder.CloseElement();
+                }
+
                 builder.OpenElement(Next(), "span");
                 builder.AddAttribute(Next(), "class", _themeQuotedStringClass);
                 builder.AddContent(Next(), quote);
@@ -381,7 +411,7 @@ namespace BlazorPrettyCode
         private void BuildRenderText(RenderTreeBuilder builder, Text text)
         {
             builder.OpenElement(Next(), "span");
-            //builder.AddAttribute(Next(), "class", _textClass);
+            builder.AddAttribute(Next(), "class", _themeTextClass);
             builder.AddContent(Next(), text.Content);
             builder.CloseElement();
         }

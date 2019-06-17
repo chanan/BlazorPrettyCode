@@ -22,6 +22,7 @@
     <li>Themes in JSON files</li>
     <li>Collapse/Exapnd of code blocks</li>
     <li>Row highlighting</li>
+    <li>Responsive (more mobile friendly)</li>
 </ul>
 
 <h2>Dependent projects</h2>
@@ -36,6 +37,10 @@
 <p>Intialize <code>BlazorPrettyCode</code> in your <code>Startup.cs</code>: <code>services.AddBlazorPrettyCode();</code>. You may also set defaults:</p>
 
 <PrettyCode CodeFile="snippets/startup.html" />
+
+<p>In your Blazor component or in <code>_imports.razor</code> import the component: <code>@@using BlazorPrettyCode</code> and add it to your page:</p>
+
+<PrettyCode CodeFile="snippets/usingSimple.html" />
 
 <h2>Demo</h2>
 

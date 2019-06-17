@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28917.182
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorPrettyCode", "src\BlazorPrettyCode\BlazorPrettyCode.csproj", "{9278DC09-C837-46B3-BF45-DE0133988991}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorPrettyCode", "src\BlazorPrettyCode\BlazorPrettyCode.csproj", "{9278DC09-C837-46B3-BF45-DE0133988991}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample", "src\Sample\Sample.csproj", "{474B654D-7BCA-49AC-9423-BE77BA9F0F57}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample", "src\Sample\Sample.csproj", "{474B654D-7BCA-49AC-9423-BE77BA9F0F57}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
