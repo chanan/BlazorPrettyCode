@@ -2,7 +2,7 @@
 
 namespace BlazorPrettyCode.Themes
 {
-    internal class Setting : ISetting
+    public class Setting
     {
         public string Name { get; set; }
         public string Scope { get; set; }

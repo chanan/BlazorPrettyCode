@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 namespace BlazorPrettyCode
 {
@@ -17,12 +18,15 @@ namespace BlazorPrettyCode
     {
         [Parameter] private bool? Debug { get; set; } = null;
         [Parameter] private string CodeFile { get; set; }
-        [Parameter] private ITheme Theme { get; set; }
+        [Parameter] private string Theme { get; set; }
         [Parameter] private bool? ShowLineNumbers { get; set; } = null;
+        [Parameter] private string HighlightLines { get; set; }
 
         private List<Line> Lines { get; set; } = new List<Line>();
         private bool _isInitDone = false;
         private int i = 0;
+        private List<int> _highlightLines = new List<int>();
+        private int _lineNum = 1; 
 
         //Theme css
         private string _themePreClass;
@@ -33,6 +37,8 @@ namespace BlazorPrettyCode
         private string _themeQuotedStringClass;
         private string _themeRazorKeywordClass;
         private string _themeTextClass;
+
+        private string _themeRowHighlight;
 
         //Non Theme css
         private string _basePreClass;
@@ -61,6 +67,12 @@ namespace BlazorPrettyCode
                 table-layout: fixed;
                 width: 100%; /* anything but auto, otherwise fixed layout not guaranteed */
                 white-space: pre-wrap;
+                @media only screen and (min-width: 320px) and (max-width: 480px) {
+                    font-size: 50%;
+                }
+                @media (min-width: 481px) and (max-width: 1223px) {
+                    font-size: 80%;
+                }
                 &:before {
                     counter-reset: linenum;
                 }
@@ -92,7 +104,12 @@ namespace BlazorPrettyCode
                 padding-left: 1em;
             ");
 
-            ITheme theme = Theme ?? DefaultConfig.DefaultTheme;
+            string themeName = Theme ?? DefaultConfig.DefaultTheme;
+            string uri = themeName.ToLower().StartsWith("http") ? themeName : "_content/BlazorPrettyCode/" + themeName + ".json";
+
+            string strJson = await HttpClient.GetStringAsync(uri);
+
+            Theme theme = JsonSerializer.Parse<Theme>(strJson);
             _showLineNumbers = ShowLineNumbers ?? DefaultConfig.ShowLineNumbers;
 
             foreach (string font in getFonts(theme))
@@ -101,7 +118,7 @@ namespace BlazorPrettyCode
             }
 
             _themePreClass = await Styled.Css(getThemeValues(theme));
-            _themeTagSymbolsClass = await Styled.Css(getThemeValues(theme, "Tag start/end"));
+            _themeTagSymbolsClass = await Styled.Css(getThemeValues(theme, "Tag symbols"));
             _themeTagNameClass = await Styled.Css(getThemeValues(theme, "Tag name"));
             _themeAttributeNameClass = await Styled.Css(getThemeValues(theme, "Attribute name"));
             _themeAttributeValueClass = await Styled.Css(getThemeValues(theme, "Attribute value"));
@@ -109,17 +126,51 @@ namespace BlazorPrettyCode
             _themeRazorKeywordClass = await Styled.Css(getThemeValues(theme, "Razor Keyword"));
             _themeTextClass = await Styled.Css(getThemeValues(theme, "Text"));
 
+            GetHighlightLines();
+            if(_highlightLines.Count > 0)
+            {
+                _themeRowHighlight = await Styled.Css(getThemeValues(theme, "Row Highlight"));
+            }
+
             _isInitDone = true;
         }
 
-        private List<string> getFonts(ITheme theme)
+        private void GetHighlightLines()
+        {
+            if (HighlightLines == null) return;
+            var arr = HighlightLines.Split(',');
+            foreach(var str in arr)
+            {
+                if(str.Contains("-"))
+                {
+                    var toFromArr = str.Split('-');
+                    if(int.TryParse(toFromArr[0].Trim(), out int to) && int.TryParse(toFromArr[1].Trim(), out int from))
+                    {
+                        foreach(var num in Enumerable.Range(to, from - to + 1))
+                        {
+                            _highlightLines.Add(num);
+                        }
+                    }
+                }
+                else
+                {
+                    if (int.TryParse(str.Trim(), out int num))
+                    {
+                        _highlightLines.Add(num);
+                    }
+                }
+            }
+            //_highlightLines.ForEach(x => Console.WriteLine(x));
+        }
+
+        private List<string> getFonts(Theme theme)
         {
             List<string> list = new List<string>();
-            List<ISetting> fonts = (from s in theme.Settings
+            List<Setting> fonts = (from s in theme.Settings
                                     where s.Name != null && s.Name.ToLower() == "font"
                                     select s).ToList();
 
-            foreach(ISetting font in fonts)
+            foreach(Setting font in fonts)
             {
                 StringBuilder sb = new StringBuilder();
                 foreach (KeyValuePair<string, string> kvp in font.Settings)
@@ -132,10 +183,10 @@ namespace BlazorPrettyCode
             return list;
         }
 
-        private string getThemeValues(ITheme theme, string setting = null)
+        private string getThemeValues(Theme theme, string setting = null)
         {
             Dictionary<string, string> dictionary = new Dictionary<string, string>();
-            ISetting settings = (from s in theme.Settings
+            Setting settings = (from s in theme.Settings
                                  where s.Name == null
                                  select s).SingleOrDefault();
 
@@ -212,12 +263,13 @@ namespace BlazorPrettyCode
 
         private void BuildRenderLine(RenderTreeBuilder builderLine, Line line)
         {
+            string highlightClass = _highlightLines.Contains(_lineNum) ? " " + _themeRowHighlight : string.Empty;
             builderLine.OpenElement(Next(), "span");
             builderLine.AddAttribute(Next(), "class", _baseRowSpan);
             if (_showLineNumbers)
             {
                 builderLine.OpenElement(Next(), "span");
-                builderLine.AddAttribute(Next(), "class", _baseLineNumbersCell);
+                builderLine.AddAttribute(Next(), "class", _baseLineNumbersCell + highlightClass);
                 builderLine.CloseElement();
             }
             builderLine.OpenElement(Next(), "code");
@@ -230,6 +282,7 @@ namespace BlazorPrettyCode
 
             builderLine.CloseElement();
             builderLine.CloseElement();
+            _lineNum++;
         }
 
         private void BuildRenderMain(RenderTreeBuilder builder, Line line)

@@ -5,7 +5,7 @@ namespace BlazorPrettyCode
     public class DefaultSettings
     {
         public bool IsDevelopmentMode { get; set; }
-        public ITheme DefaultTheme { get; set; } = new PrettyCodeDefault();
+        public string DefaultTheme { get; set; } = "PrettyCodeDefault";
         public bool ShowLineNumbers { get; set; } = true;
     }
 }

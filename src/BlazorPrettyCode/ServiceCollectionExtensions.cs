@@ -20,7 +20,7 @@ namespace BlazorPrettyCode
             return serviceCollection.AddBlazorPrettyCode(defaultSettings =>
             {
                 defaultSettings.IsDevelopmentMode = false;
-                defaultSettings.DefaultTheme = new PrettyCodeDefault();
+                defaultSettings.DefaultTheme = "PrettyCodeDefault";
             });
         }
     }

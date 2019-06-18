@@ -13,16 +13,14 @@
     <li>Basic formating and display of Razor files</li>
     <li>Theme support</li>
     <li>Line numbering</li>
+    <li>Row highlighting</li>
 </ul>
 
 <h2>Coming soon</h2>
 
 <ul>
     <li>Enhanced support for C# code</li>
-    <li>Themes in JSON files</li>
     <li>Collapse/Exapnd of code blocks</li>
-    <li>Row highlighting</li>
-    <li>Responsive (more mobile friendly)</li>
 </ul>
 
 <h2>Dependent projects</h2>
@@ -54,7 +52,7 @@
 
 <h4>Razor Snippets</h4>
 
-<PrettyCode CodeFile="snippets/demoSnippet.html" />
+<PrettyCode CodeFile="snippets/demoSnippet.html"  />
 
 <h2>Line Numbers</h2>
 
@@ -62,17 +60,33 @@
 
 <PrettyCode CodeFile="snippets/demo.html" ShowLineNumbers="false" />
 
+<h2>Row Highlighting</h2>
+
+<p>You can supply row numbers to <code>HighlightLines</code> parameter to highlight some rows. <code>ShowLineNumbers</code> must also be set to true to see the highlights.
+    You can pass several numbers as well as a range as in the example below:</p>
+
+<PrettyCode CodeFile="snippets/highlights.html" HighlightLines="1,3-5" />
+
 <h2>Themes</h2>
 
 <p>
-    Themes are defined as classes that implements <code>BlazorPrettyCode.Themes.ICodeThemes</code> and default to <code>BlazorPrettyCode.Themes.PrettyCodeDefault</code> which can be
-    overridden by passing class to Theme attribute of <code>PrettyCode</code>. In the future themes will also be able to be defiened in json. Below is a PrettyCode block using the theme
-    <code>VisualStudioSolarizedLight</code>:
+    Themes are defined in json and default to <code>content/PrettyCodeDefault</code> which can be
+    overridden by passing class to Theme attribute of <code>PrettyCode</code>. Below is a PrettyCode block using the theme
+    <code>SolarizedLight</code>:
 </p>
 
-<PrettyCode CodeFile="snippets/usingThemes.html" Theme="@(new BlazorPrettyCode.Themes.VisualStudioSolarizedLight())" />
+<PrettyCode CodeFile="snippets/usingThemes.html" Theme="SolarizedLight" />
+
+<p>The builtin themes you can use are:</p>
+
+<ul>
+    <li>PrettyCodeDefault</li>
+    <li>SolarizedLight</li>
+    <li>SolarizedDark</li>
+</ul>
+
+<p>You may also supply a uri to the <code>Theme</code> parameter.</p>
 
 <div class="text-center">
     <a href="https://github.com/chanan/BlazorPrettyCode"><img src="https://img.shields.io/github/stars/chanan/BlazorPrettyCode.svg?style=social&label=Stars" /></a>
 </div>
-

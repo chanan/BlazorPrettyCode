@@ -11,7 +11,7 @@
     <RazorLangVersion>3.0</RazorLangVersion>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <PackageId>BlazorPrettyCode</PackageId>
-    <Version>1.0.0-preview6-06</Version>
+    <Version>1.0.0-preview6-07</Version>
     <Authors>Chanan Braunstein</Authors>
     <Title>Blazor PrettyCode</Title>
     <Description>Razor Code Display Component</Description>
@@ -20,9 +20,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- .js/.css files will be referenced via <script>/<link> tags; other content files will just be included in the app's 'dist' directory without any tags referencing them -->
+    <EmbeddedResource Include="content\**\*.js" LogicalName="blazor:js:%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="content\**\*.css" LogicalName="blazor:css:%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="content\**" Exclude="**\*.js;**\*.css" LogicalName="blazor:file:%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="content\SolarizedDark.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CSHTMLTokenizer" Version="0.7.2" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Browser" Version="3.0.0-preview6.19307.2" />
     <PackageReference Include="BlazorStyled" Version="1.0.0-preview6-02" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
   </ItemGroup>
 
 </Project>
