@@ -52,7 +52,7 @@
 
 <h4>Razor Snippets</h4>
 
-<PrettyCode CodeFile="snippets/demoSnippet.html"  />
+<PrettyCode CodeFile="snippets/demoSnippet.html" />
 
 <h2>Line Numbers</h2>
 
@@ -62,10 +62,25 @@
 
 <h2>Row Highlighting</h2>
 
-<p>You can supply row numbers to <code>HighlightLines</code> parameter to highlight some rows. <code>ShowLineNumbers</code> must also be set to true to see the highlights.
-    You can pass several numbers as well as a range as in the example below:</p>
+<p>
+    You can supply row numbers to <code>HighlightLines</code> parameter to highlight some rows. <code>ShowLineNumbers</code> must also be set to true to see the highlights.
+    You can pass several numbers as well as a range as in the example below:
+</p>
 
 <PrettyCode CodeFile="snippets/highlights.html" HighlightLines="1,3-5" />
+
+<h2>Titles</h2>
+
+<PrettyCode CodeFile="snippets/titleExample.html" Title="Title Example" />
+
+<h2>Expand / Collapse</h2>
+
+<PrettyCode CodeFile="snippets/collapseExample.html" Title="Collapse Example" ShowCollapse="true" IsCollapsed="true" />
+
+<p>
+    You can also set all snippets to have a collapse link by setting <code>DefaultSettings.ShowCollapse</code> to <code>true</code>.
+    If you want all snippets to be collapsed by default you can set <code>DefaultSettings.IsCollapsed</code> to <code>true</code>.
+</p>
 
 <h2>Themes</h2>
 
@@ -93,7 +108,9 @@
 
 <h2>Parse Errors</h2>
 
-<p>By default, parsing errors will appear in the code box. Setting <code>ShowException</code> to <code>false</code> on the component or on <code>DefaultSettings</code> will supress the display of exceptions 
-    in the component (they will still appear in the browser console).</p>
+<p>
+    By default, parsing errors will appear in the code box. Setting <code>ShowException</code> to <code>false</code> on the component or on <code>DefaultSettings</code> will supress the display of exceptions
+    in the component (they will still appear in the browser console).
+</p>
 
 <PrettyCode CodeFile="snippets/badHtml.html" />

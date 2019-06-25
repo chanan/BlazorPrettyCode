@@ -33,7 +33,7 @@
   <ItemGroup>
     <PackageReference Include="CSHTMLTokenizer" Version="0.7.3" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Browser" Version="3.0.0-preview6.19307.2" />
-    <PackageReference Include="BlazorStyled" Version="1.0.0-preview6-02" />
+    <PackageReference Include="BlazorStyled" Version="1.0.0-preview6-03" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
   </ItemGroup>
 

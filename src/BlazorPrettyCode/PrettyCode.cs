@@ -22,6 +22,9 @@ namespace BlazorPrettyCode
         [Parameter] private bool? ShowLineNumbers { get; set; } = null;
         [Parameter] private string HighlightLines { get; set; }
         [Parameter] private bool? ShowException { get; set; } = null;
+        [Parameter] private bool? ShowCollapse { get; set; } = null;
+        [Parameter] private string Title { get; set; } = null;
+        [Parameter] private bool? IsCollapsed { get; set; } = null;
 
         private List<Line> Lines { get; set; } = new List<Line>();
         private bool _isInitDone = false;
@@ -31,6 +34,8 @@ namespace BlazorPrettyCode
 
         //Config variables
         private bool _showLineNumbers;
+        private bool _showCollapse;
+        private bool _isCollapsed;
 
         //Theme css
         private string _themePreClass;
@@ -49,6 +54,10 @@ namespace BlazorPrettyCode
         private string _baseRowSpan;
         private string _baseLineNumbersCell;
         private string _baseCodeCell;
+        private string _baseRowSpanTitle;
+        private string _baseCellSpacer;
+        private string _baseCellTitle;
+        private string _baseCollapse;
 
         [Inject] protected HttpClient HttpClient { get; set; }
         [Inject] protected IStyled Styled { get; set; }
@@ -58,8 +67,10 @@ namespace BlazorPrettyCode
         {
             bool debug = Debug ?? DefaultConfig.IsDevelopmentMode;
             bool showException = ShowException ?? DefaultConfig.ShowException;
-            string str = await HttpClient.GetStringAsync(CodeFile);
+            _showCollapse = ShowCollapse ?? DefaultConfig.ShowCollapse;
+            _isCollapsed = IsCollapsed ?? DefaultConfig.IsCollapsed;
 
+            string str = await HttpClient.GetStringAsync(CodeFile);
             try
             {
                 Lines = Tokenizer.Parse(str);
@@ -93,6 +104,7 @@ namespace BlazorPrettyCode
                 table-layout: fixed;
                 width: 100%; /* anything but auto, otherwise fixed layout not guaranteed */
                 white-space: pre-wrap;
+                -webkit-border-radius: 5px;
                 @media only screen and (min-width: 320px) and (max-width: 480px) {
                     font-size: 50%;
                 }
@@ -103,6 +115,8 @@ namespace BlazorPrettyCode
                     counter-reset: linenum;
                 }
             ");
+
+            //Code Row
 
             _baseRowSpan = await Styled.Css(@"
                 display: table-row;
@@ -128,6 +142,45 @@ namespace BlazorPrettyCode
             _baseCodeCell = await Styled.Css(@"
                 display: table-cell;
                 padding-left: 1em;
+            ");
+
+            //Title Row
+
+            _baseRowSpanTitle = await Styled.Css(@"
+                display: table-row;
+            ");
+
+            _baseCellSpacer = await Styled.Css(@"
+                display: table-cell;
+                user-select: none;
+                -moz-user-select: none;
+                -webkit-user-select: none;
+                width: 4em;
+                border-bottom-style: solid;
+                border-bottom-width: 1px;
+                border-bottom-color: rgb(223, 225, 230);
+            ");
+
+            _baseCellTitle = await Styled.Css(@"
+                display: table-cell;
+                padding: 0.4em 1em 0.4em;
+                font-weight: bold;
+                border-bottom-style: solid;
+                border-bottom-width: 1px;
+                border-bottom-color: rgb(223, 225, 230);
+            ");
+
+            // Expand / Collapse
+
+            _baseCollapse = await Styled.Css(@"
+                font-weight: normal;
+                font-size: 0.8em;
+                display: table-cell;
+                width: 10em;
+                &:hover {
+                    text-decoration: underline;
+                    cursor: pointer;
+                }
             ");
 
             string themeName = Theme ?? DefaultConfig.DefaultTheme;
@@ -190,7 +243,6 @@ namespace BlazorPrettyCode
                     }
                 }
             }
-            //_highlightLines.ForEach(x => Console.WriteLine(x));
         }
 
         private List<string> getFonts(Theme theme)
@@ -284,11 +336,48 @@ namespace BlazorPrettyCode
 
             builder.OpenElement(Next(), "pre");
             builder.AddAttribute(Next(), "class", _basePreClass + " " + _themePreClass);
-            foreach (Line line in Lines)
+            if(!string.IsNullOrWhiteSpace(Title) || _showCollapse)
             {
-                builder.AddContent(Next(), builderLine => BuildRenderLine(builderLine, line));
+                builder.AddContent(Next(), builderTitle => BuildRenderTitle(builderTitle));
+            }
+            if(!_isCollapsed)
+            {
+                foreach (Line line in Lines)
+                {
+                    builder.AddContent(Next(), builderLine => BuildRenderLine(builderLine, line));
+                }
             }
             builder.CloseElement();
+        }
+
+        private void BuildRenderTitle(RenderTreeBuilder builderTitle)
+        {
+            builderTitle.OpenElement(Next(), "span");
+            builderTitle.AddAttribute(Next(), "class", _baseRowSpanTitle);
+            builderTitle.OpenElement(Next(), "span");
+            builderTitle.AddAttribute(Next(), "class", _baseCellSpacer);
+            builderTitle.CloseElement();
+            builderTitle.OpenElement(Next(), "span");
+            builderTitle.AddAttribute(Next(), "class", _baseCellTitle);
+            if(!string.IsNullOrWhiteSpace(Title))
+            {
+                builderTitle.AddContent(Next(), Title);
+            }
+            builderTitle.CloseElement();
+            if (_showCollapse)
+            {
+                builderTitle.OpenElement(Next(), "span");
+                builderTitle.AddAttribute(Next(), "class", _baseCollapse);
+                builderTitle.AddAttribute(3, "onclick", EventCallback.Factory.Create<UIMouseEventArgs>(this, OnClick));
+                builderTitle.AddContent(Next(), _isCollapsed ? "Expand source" : "Collapse source");
+                builderTitle.CloseElement();
+            }
+            builderTitle.CloseElement();
+        }
+
+        private void OnClick()
+        {
+            _isCollapsed = !_isCollapsed;
         }
 
         private void BuildRenderLine(RenderTreeBuilder builderLine, Line line)

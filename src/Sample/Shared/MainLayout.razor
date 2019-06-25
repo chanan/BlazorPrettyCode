@@ -11,6 +11,8 @@
 
     protected override async Task OnInitAsync()
     {
+        await Styled.Css(Mixins.Normalize());
+
         main = await Styled.Css(@"
             max-width: 1200px;
             margin: 0 auto;
