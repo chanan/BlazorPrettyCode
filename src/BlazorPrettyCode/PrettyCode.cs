@@ -9,8 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace BlazorPrettyCode
 {
@@ -21,12 +21,16 @@ namespace BlazorPrettyCode
         [Parameter] private string Theme { get; set; }
         [Parameter] private bool? ShowLineNumbers { get; set; } = null;
         [Parameter] private string HighlightLines { get; set; }
+        [Parameter] private bool? ShowException { get; set; } = null;
 
         private List<Line> Lines { get; set; } = new List<Line>();
         private bool _isInitDone = false;
         private int i = 0;
-        private List<int> _highlightLines = new List<int>();
-        private int _lineNum = 1; 
+        private readonly List<int> _highlightLines = new List<int>();
+        private int _lineNum = 1;
+
+        //Config variables
+        private bool _showLineNumbers;
 
         //Theme css
         private string _themePreClass;
@@ -46,8 +50,6 @@ namespace BlazorPrettyCode
         private string _baseLineNumbersCell;
         private string _baseCodeCell;
 
-        private bool _showLineNumbers;
-
         [Inject] protected HttpClient HttpClient { get; set; }
         [Inject] protected IStyled Styled { get; set; }
         [Inject] protected DefaultSettings DefaultConfig { get; set; }
@@ -55,8 +57,32 @@ namespace BlazorPrettyCode
         protected override async Task OnInitAsync()
         {
             bool debug = Debug ?? DefaultConfig.IsDevelopmentMode;
+            bool showException = ShowException ?? DefaultConfig.ShowException;
             string str = await HttpClient.GetStringAsync(CodeFile);
-            Lines = Tokenizer.Parse(str);
+
+            try
+            {
+                Lines = Tokenizer.Parse(str);
+            }
+            catch (Exception e)
+            {
+                if (showException)
+                {
+                    try
+                    {
+                        Lines = Tokenizer.Parse(e.ToString());
+                    }
+                    catch (Exception)
+                    {
+                        Console.Error.WriteLine(e);
+                    }
+                }
+                else
+                {
+                    Console.Error.WriteLine(e);
+                }
+            }
+
             if (debug)
             {
                 PrintToConsole();
@@ -127,7 +153,7 @@ namespace BlazorPrettyCode
             _themeTextClass = await Styled.Css(getThemeValues(theme, "Text"));
 
             GetHighlightLines();
-            if(_highlightLines.Count > 0)
+            if (_highlightLines.Count > 0)
             {
                 _themeRowHighlight = await Styled.Css(getThemeValues(theme, "Row Highlight"));
             }
@@ -137,16 +163,20 @@ namespace BlazorPrettyCode
 
         private void GetHighlightLines()
         {
-            if (HighlightLines == null) return;
-            var arr = HighlightLines.Split(',');
-            foreach(var str in arr)
+            if (HighlightLines == null)
             {
-                if(str.Contains("-"))
+                return;
+            }
+
+            string[] arr = HighlightLines.Split(',');
+            foreach (string str in arr)
+            {
+                if (str.Contains("-"))
                 {
-                    var toFromArr = str.Split('-');
-                    if(int.TryParse(toFromArr[0].Trim(), out int to) && int.TryParse(toFromArr[1].Trim(), out int from))
+                    string[] toFromArr = str.Split('-');
+                    if (int.TryParse(toFromArr[0].Trim(), out int to) && int.TryParse(toFromArr[1].Trim(), out int from))
                     {
-                        foreach(var num in Enumerable.Range(to, from - to + 1))
+                        foreach (int num in Enumerable.Range(to, from - to + 1))
                         {
                             _highlightLines.Add(num);
                         }
@@ -167,10 +197,10 @@ namespace BlazorPrettyCode
         {
             List<string> list = new List<string>();
             List<Setting> fonts = (from s in theme.Settings
-                                    where s.Name != null && s.Name.ToLower() == "font"
-                                    select s).ToList();
+                                   where s.Name != null && s.Name.ToLower() == "font"
+                                   select s).ToList();
 
-            foreach(Setting font in fonts)
+            foreach (Setting font in fonts)
             {
                 StringBuilder sb = new StringBuilder();
                 foreach (KeyValuePair<string, string> kvp in font.Settings)
@@ -187,8 +217,8 @@ namespace BlazorPrettyCode
         {
             Dictionary<string, string> dictionary = new Dictionary<string, string>();
             Setting settings = (from s in theme.Settings
-                                 where s.Name == null
-                                 select s).SingleOrDefault();
+                                where s.Name == null
+                                select s).SingleOrDefault();
 
             if (settings != null)
             {
@@ -345,7 +375,7 @@ namespace BlazorPrettyCode
             string quote = GetQuoteChar(quotedTag.QuoteMark);
             if (quotedTag.LineType == LineType.SingleLine || quotedTag.LineType == LineType.MultiLineStart)
             {
-                if(quotedTag.IsMultiLineStatement)
+                if (quotedTag.IsMultiLineStatement)
                 {
                     builder.OpenElement(Next(), "span");
                     builder.AddAttribute(Next(), "class", _themeQuotedStringClass);

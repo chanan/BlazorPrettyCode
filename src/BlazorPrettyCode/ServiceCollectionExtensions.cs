@@ -1,5 +1,4 @@
-﻿using BlazorPrettyCode.Themes;
-using BlazorStyled;
+﻿using BlazorStyled;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
