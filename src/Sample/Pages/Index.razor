@@ -55,6 +55,24 @@
 
 <PrettyCode CodeFile="snippets/demoSnippet.html" />
 
+<h4>Razor Plus Code Section</h4>
+
+<p>The example below loads the code in two parts (<code>CodeFile</code> and <code>CodeSectionFile</code>) and uses line numbers to select the relevant parrs. 
+    When <code>CodeSectionFile</code> is not wrapped by <code>@@code { }</code> it will automatically wrapped. 
+    If <code>CodeSectionFile</code> is empty, but <code>CodeSectionFileLineNumbers</code> is not, it is assumed that the code section is in the same file as <code>CodeFile</code>).
+    For example, the below section:
+    </p>
+
+<PrettyCode
+            CodeFile="https://raw.githubusercontent.com/chanan/BlazorStyled/master/src/Sample/Pages/Basic.razor"
+            CodeFileLineNumbers="2,12"
+            CodeSectionFileLineNumbers="43-48"
+ />
+
+<p>is created by:</p>
+
+<PrettyCode CodeFile="snippets/githubSnippet.html" />
+
 <h2>Line Numbers</h2>
 
 <p>Line numbers can be turned on and off globally or on a per basis on the componenet level:</p>
@@ -101,11 +119,7 @@
     <li>SolarizedDark</li>
 </ul>
 
-<p>You may also supply a uri to the <code>Theme</code> parameter.</p>
-
-<div class="text-center">
-    <a href="https://github.com/chanan/BlazorPrettyCode"><img src="https://img.shields.io/github/stars/chanan/BlazorPrettyCode.svg?style=social&label=Stars" /></a>
-</div>
+<p>You may also create your own theme json file and supply a uri to the <code>Theme</code> parameter.</p>
 
 <h2>Parse Errors</h2>
 
@@ -115,3 +129,7 @@
 </p>
 
 <PrettyCode CodeFile="snippets/badHtml.html" />
+
+<div class="text-center">
+    <a href="https://github.com/chanan/BlazorPrettyCode"><img src="https://img.shields.io/github/stars/chanan/BlazorPrettyCode.svg?style=social&label=Stars" /></a>
+</div>

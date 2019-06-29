@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace BlazorPrettyCode
@@ -18,6 +19,9 @@ namespace BlazorPrettyCode
     {
         [Parameter] private bool? Debug { get; set; } = null;
         [Parameter] private string CodeFile { get; set; }
+        [Parameter] private string CodeFileLineNumbers { get; set; }
+        [Parameter] private string CodeSectionFile { get; set; }
+        [Parameter] private string CodeSectionFileLineNumbers { get; set; }
         [Parameter] private string Theme { get; set; }
         [Parameter] private bool? ShowLineNumbers { get; set; } = null;
         [Parameter] private string HighlightLines { get; set; }
@@ -29,7 +33,7 @@ namespace BlazorPrettyCode
         private List<Line> Lines { get; set; } = new List<Line>();
         private bool _isInitDone = false;
         private int i = 0;
-        private readonly List<int> _highlightLines = new List<int>();
+        private List<int> _highlightLines;
         private int _lineNum = 1;
 
         //Config variables
@@ -70,7 +74,44 @@ namespace BlazorPrettyCode
             _showCollapse = ShowCollapse ?? DefaultConfig.ShowCollapse;
             _isCollapsed = IsCollapsed ?? DefaultConfig.IsCollapsed;
 
-            string str = await HttpClient.GetStringAsync(CodeFile);
+            await InitStrings(showException);
+
+            if (debug)
+            {
+                PrintToConsole();
+            }
+
+            await InitCSS();
+            await InitThemeCss();
+
+            _isInitDone = true;
+        }
+
+        private async Task InitStrings(bool showException)
+        {
+            string CodeFileString = await HttpClient.GetStringAsync(CodeFile);
+            string codeFileLinesString = GetLines(CodeFileString, CodeFileLineNumbers);
+            string codeSectionFileLinesString = String.Empty;
+            if (!string.IsNullOrWhiteSpace(CodeSectionFile) || !string.IsNullOrWhiteSpace(CodeSectionFileLineNumbers))
+            {
+                string codeSectionString;
+                if (!string.IsNullOrWhiteSpace(CodeSectionFile))
+                {
+                    codeSectionString = await HttpClient.GetStringAsync(CodeSectionFile);
+                }
+                else
+                {
+                    codeSectionString = CodeFileString;
+                }
+                codeSectionFileLinesString = GetLines(codeSectionString, CodeSectionFileLineNumbers);
+                if (!codeSectionFileLinesString.StartsWith("@code"))
+                {
+                    codeSectionFileLinesString = $"@code {{\n{codeSectionFileLinesString}}}";
+                }
+            }
+
+            string str = string.IsNullOrWhiteSpace(codeSectionFileLinesString) ? codeFileLinesString : codeFileLinesString + '\n' + codeSectionFileLinesString;
+
             try
             {
                 Lines = Tokenizer.Parse(str);
@@ -93,12 +134,41 @@ namespace BlazorPrettyCode
                     Console.Error.WriteLine(e);
                 }
             }
+        }
 
-            if (debug)
+        private async Task InitThemeCss()
+        {
+            string themeName = Theme ?? DefaultConfig.DefaultTheme;
+            string uri = themeName.ToLower().StartsWith("http") ? themeName : "_content/BlazorPrettyCode/" + themeName + ".json";
+
+            string strJson = await HttpClient.GetStringAsync(uri);
+
+            Theme theme = JsonSerializer.Parse<Theme>(strJson);
+            _showLineNumbers = ShowLineNumbers ?? DefaultConfig.ShowLineNumbers;
+
+            foreach (string font in getFonts(theme))
             {
-                PrintToConsole();
+                await Styled.Fontface(font);
             }
 
+            _themePreClass = await Styled.Css(getThemeValues(theme));
+            _themeTagSymbolsClass = await Styled.Css(getThemeValues(theme, "Tag symbols"));
+            _themeTagNameClass = await Styled.Css(getThemeValues(theme, "Tag name"));
+            _themeAttributeNameClass = await Styled.Css(getThemeValues(theme, "Attribute name"));
+            _themeAttributeValueClass = await Styled.Css(getThemeValues(theme, "Attribute value"));
+            _themeQuotedStringClass = await Styled.Css(getThemeValues(theme, "String"));
+            _themeRazorKeywordClass = await Styled.Css(getThemeValues(theme, "Razor Keyword"));
+            _themeTextClass = await Styled.Css(getThemeValues(theme, "Text"));
+
+            _highlightLines = GetLineNumbers(HighlightLines);
+            if (_highlightLines.Count > 0)
+            {
+                _themeRowHighlight = await Styled.Css(getThemeValues(theme, "Row Highlight"));
+            }
+        }
+
+        private async Task InitCSS()
+        {
             _basePreClass = await Styled.Css(@"
                 display: table;
                 table-layout: fixed;
@@ -182,46 +252,39 @@ namespace BlazorPrettyCode
                     cursor: pointer;
                 }
             ");
-
-            string themeName = Theme ?? DefaultConfig.DefaultTheme;
-            string uri = themeName.ToLower().StartsWith("http") ? themeName : "_content/BlazorPrettyCode/" + themeName + ".json";
-
-            string strJson = await HttpClient.GetStringAsync(uri);
-
-            Theme theme = JsonSerializer.Parse<Theme>(strJson);
-            _showLineNumbers = ShowLineNumbers ?? DefaultConfig.ShowLineNumbers;
-
-            foreach (string font in getFonts(theme))
-            {
-                await Styled.Fontface(font);
-            }
-
-            _themePreClass = await Styled.Css(getThemeValues(theme));
-            _themeTagSymbolsClass = await Styled.Css(getThemeValues(theme, "Tag symbols"));
-            _themeTagNameClass = await Styled.Css(getThemeValues(theme, "Tag name"));
-            _themeAttributeNameClass = await Styled.Css(getThemeValues(theme, "Attribute name"));
-            _themeAttributeValueClass = await Styled.Css(getThemeValues(theme, "Attribute value"));
-            _themeQuotedStringClass = await Styled.Css(getThemeValues(theme, "String"));
-            _themeRazorKeywordClass = await Styled.Css(getThemeValues(theme, "Razor Keyword"));
-            _themeTextClass = await Styled.Css(getThemeValues(theme, "Text"));
-
-            GetHighlightLines();
-            if (_highlightLines.Count > 0)
-            {
-                _themeRowHighlight = await Styled.Css(getThemeValues(theme, "Row Highlight"));
-            }
-
-            _isInitDone = true;
         }
 
-        private void GetHighlightLines()
+        private string GetLines(string str, string lineNumbers)
         {
-            if (HighlightLines == null)
+            List<int> codeFileLines = GetLineNumbers(lineNumbers);
+            if (codeFileLines.Count > 0)
             {
-                return;
+                var arr = Regex.Split(str, "\r\n|\r|\n");
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < arr.Length; i++)
+                {
+                    if (codeFileLines.Contains(i + 1))
+                    {
+                        sb.AppendLine(arr[i]);
+                    }
+                }
+                return sb.ToString();
+            }
+            else
+            {
+                return str;
+            }
+        }
+
+        private List<int> GetLineNumbers(string strLineNumbers)
+        {
+            List<int> list = new List<int>();
+            if (string.IsNullOrWhiteSpace(strLineNumbers))
+            {
+                return list;
             }
 
-            string[] arr = HighlightLines.Split(',');
+            string[] arr = strLineNumbers.Split(',');
             foreach (string str in arr)
             {
                 if (str.Contains("-"))
@@ -231,7 +294,7 @@ namespace BlazorPrettyCode
                     {
                         foreach (int num in Enumerable.Range(to, from - to + 1))
                         {
-                            _highlightLines.Add(num);
+                            list.Add(num);
                         }
                     }
                 }
@@ -239,10 +302,11 @@ namespace BlazorPrettyCode
                 {
                     if (int.TryParse(str.Trim(), out int num))
                     {
-                        _highlightLines.Add(num);
+                        list.Add(num);
                     }
                 }
             }
+            return list;
         }
 
         private List<string> getFonts(Theme theme)
