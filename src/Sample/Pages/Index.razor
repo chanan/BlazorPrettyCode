@@ -33,13 +33,18 @@
 <h2>Usage</h2>
 
 <p>Install: <a href="https://www.nuget.org/packages/BlazorPrettyCode/"><img src="https://img.shields.io/nuget/vpre/BlazorPrettyCode.svg" /></a></p>
-<p>Intialize <code>BlazorPrettyCode</code> in your <code>Startup.cs</code>: <code>services.AddBlazorPrettyCode();</code>. You may also set defaults:</p>
+<p>Initialize <code>BlazorPrettyCode</code> in your <code>Startup.cs</code>: <code>services.AddBlazorPrettyCode();</code>. You may also set defaults:</p>
 
 <PrettyCode CodeFile="snippets/startup.html" />
 
 <p>In your Blazor component or in <code>_imports.razor</code> import the component: <code>@@using BlazorPrettyCode</code> and add it to your page:</p>
 
 <PrettyCode CodeFile="snippets/usingSimple.html" />
+
+<h3>Server Side Support</h3>
+
+<p>Blazor Pretty Code works in Server Side as well. The only change is that <code>&lt;script src="_content/BlazorStyled/styled.js">&lt;/script></code> needs to be added to your
+    <code>_Host.cshtml</code> file.</p>
 
 <h2>Demo</h2>
 
@@ -66,7 +71,7 @@
 <PrettyCode
             CodeFile="https://raw.githubusercontent.com/chanan/BlazorStyled/master/src/Sample/Pages/Basic.razor"
             CodeFileLineNumbers="2,12"
-            CodeSectionFileLineNumbers="43-48"
+            CodeSectionFileLineNumbers="43,46-49"
  />
 
 <p>is created by:</p>

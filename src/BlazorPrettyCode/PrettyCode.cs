@@ -4,6 +4,7 @@ using CSHTMLTokenizer;
 using CSHTMLTokenizer.Tokens;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.RenderTree;
+using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,8 +34,9 @@ namespace BlazorPrettyCode
         private List<Line> Lines { get; set; } = new List<Line>();
         private bool _isInitDone = false;
         private int i = 0;
-        private List<int> _highlightLines;
+        private List<int> _highlightLines = new List<int>();
         private int _lineNum = 1;
+        private bool _clientSide = true;
 
         //Config variables
         private bool _showLineNumbers;
@@ -66,6 +68,7 @@ namespace BlazorPrettyCode
         [Inject] protected HttpClient HttpClient { get; set; }
         [Inject] protected IStyled Styled { get; set; }
         [Inject] protected DefaultSettings DefaultConfig { get; set; }
+        [Inject] protected IJSRuntime JSRuntime { get; set; }
 
         protected override async Task OnInitAsync()
         {
@@ -74,24 +77,51 @@ namespace BlazorPrettyCode
             _showCollapse = ShowCollapse ?? DefaultConfig.ShowCollapse;
             _isCollapsed = IsCollapsed ?? DefaultConfig.IsCollapsed;
 
-            await InitStrings(showException);
+            await InitSourceFile(showException);
 
             if (debug)
             {
                 PrintToConsole();
             }
 
-            await InitCSS();
-            await InitThemeCss();
+            _clientSide = JSRuntime is IJSInProcessRuntime;
 
-            _isInitDone = true;
+            if(_clientSide)
+            {
+                await InitCSS();
+                await InitThemeCss();
+            }
+
+            try
+            {
+                await InitCSS();
+                await InitThemeCss();
+            }
+            catch(Exception)
+            {
+                _clientSide = false;
+            }
+            finally
+            {
+                _isInitDone = true;
+            }
         }
 
-        private async Task InitStrings(bool showException)
+        protected override async Task OnAfterRenderAsync()
+        {
+            if(!_clientSide)
+            {
+                await InitCSS();
+                await InitThemeCss();
+                StateHasChanged();
+            }
+        }
+
+        private async Task InitSourceFile(bool showException)
         {
             string CodeFileString = await HttpClient.GetStringAsync(CodeFile);
             string codeFileLinesString = GetLines(CodeFileString, CodeFileLineNumbers);
-            string codeSectionFileLinesString = String.Empty;
+            string codeSectionFileLinesString = string.Empty;
             if (!string.IsNullOrWhiteSpace(CodeSectionFile) || !string.IsNullOrWhiteSpace(CodeSectionFileLineNumbers))
             {
                 string codeSectionString;
@@ -112,17 +142,46 @@ namespace BlazorPrettyCode
 
             string str = string.IsNullOrWhiteSpace(codeSectionFileLinesString) ? codeFileLinesString : codeFileLinesString + '\n' + codeSectionFileLinesString;
 
+            Parse(showException, str);
+        }
+
+        private void Parse(bool showException, string str)
+        {
             try
             {
                 Lines = Tokenizer.Parse(str);
             }
             catch (Exception e)
             {
+                Line line = new Line();
+                if (e is TokenizationException te)
+                {
+                    try
+                    {
+                        if (te.LineNumber != 0)
+                        {
+                            string context = GetLines(str, te.LineNumber.ToString());
+                            line = new Line() { Tokens = new List<IToken> { new Text() } };
+                            foreach (char ch in context)
+                            {
+                                line.Tokens[0].Append(ch);
+                            }
+                        }
+                    }
+                    catch (Exception) { }
+                }
                 if (showException)
                 {
                     try
                     {
-                        Lines = Tokenizer.Parse(e.ToString());
+                        Lines.Clear();
+                        if (line.Tokens.Count > 0)
+                        {
+                            Lines.Add(line);
+                        }
+                        List<Line> lines = Tokenizer.Parse(e.ToString());
+                        Lines.AddRange(lines);
+
                     }
                     catch (Exception)
                     {
@@ -259,7 +318,7 @@ namespace BlazorPrettyCode
             List<int> codeFileLines = GetLineNumbers(lineNumbers);
             if (codeFileLines.Count > 0)
             {
-                var arr = Regex.Split(str, "\r\n|\r|\n");
+                string[] arr = Regex.Split(str, "\r\n|\r|\n");
                 StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < arr.Length; i++)
                 {
@@ -400,11 +459,11 @@ namespace BlazorPrettyCode
 
             builder.OpenElement(Next(), "pre");
             builder.AddAttribute(Next(), "class", _basePreClass + " " + _themePreClass);
-            if(!string.IsNullOrWhiteSpace(Title) || _showCollapse)
+            if (!string.IsNullOrWhiteSpace(Title) || _showCollapse)
             {
                 builder.AddContent(Next(), builderTitle => BuildRenderTitle(builderTitle));
             }
-            if(!_isCollapsed)
+            if (!_isCollapsed)
             {
                 foreach (Line line in Lines)
                 {
@@ -423,7 +482,7 @@ namespace BlazorPrettyCode
             builderTitle.CloseElement();
             builderTitle.OpenElement(Next(), "span");
             builderTitle.AddAttribute(Next(), "class", _baseCellTitle);
-            if(!string.IsNullOrWhiteSpace(Title))
+            if (!string.IsNullOrWhiteSpace(Title))
             {
                 builderTitle.AddContent(Next(), Title);
             }
