@@ -30,6 +30,7 @@ namespace BlazorPrettyCode
         [Parameter] private bool? ShowCollapse { get; set; } = null;
         [Parameter] private string Title { get; set; } = null;
         [Parameter] private bool? IsCollapsed { get; set; } = null;
+        [Parameter] private bool? AttemptToFixTabs { get; set; } = null;
 
         private List<Line> Lines { get; set; } = new List<Line>();
         private bool _isInitDone = false;
@@ -42,6 +43,7 @@ namespace BlazorPrettyCode
         private bool _showLineNumbers;
         private bool _showCollapse;
         private bool _isCollapsed;
+        private bool _attemptToFixTabs;
 
         //Theme css
         private string _themePreClass;
@@ -76,6 +78,7 @@ namespace BlazorPrettyCode
             bool showException = ShowException ?? DefaultConfig.ShowException;
             _showCollapse = ShowCollapse ?? DefaultConfig.ShowCollapse;
             _isCollapsed = IsCollapsed ?? DefaultConfig.IsCollapsed;
+            _attemptToFixTabs = AttemptToFixTabs ?? DefaultConfig.AttemptToFixTabs;
 
             await InitSourceFile(showException);
 
@@ -86,7 +89,7 @@ namespace BlazorPrettyCode
 
             _clientSide = JSRuntime is IJSInProcessRuntime;
 
-            if(_clientSide)
+            if (_clientSide)
             {
                 await InitCSS();
                 await InitThemeCss();
@@ -97,7 +100,7 @@ namespace BlazorPrettyCode
                 await InitCSS();
                 await InitThemeCss();
             }
-            catch(Exception)
+            catch (Exception)
             {
                 _clientSide = false;
             }
@@ -109,7 +112,7 @@ namespace BlazorPrettyCode
 
         protected override async Task OnAfterRenderAsync()
         {
-            if(!_clientSide)
+            if (!_clientSide)
             {
                 await InitCSS();
                 await InitThemeCss();
@@ -143,6 +146,47 @@ namespace BlazorPrettyCode
             string str = string.IsNullOrWhiteSpace(codeSectionFileLinesString) ? codeFileLinesString : codeFileLinesString + '\n' + codeSectionFileLinesString;
 
             Parse(showException, str);
+
+            if (_attemptToFixTabs)
+            {
+                FixTabs();
+            }
+        }
+
+        private void FixTabs()
+        {
+            StringBuilder ignored = new StringBuilder();
+            if (Lines[0].Tokens[0].TokenType == TokenType.Text)
+            {
+                bool foundChar = false;
+                foreach (char ch in ((Text)Lines[0].Tokens[0]).Content)
+                {
+                    if (!foundChar && char.IsWhiteSpace(ch))
+                    {
+                        ignored.Append(ch);
+                    }
+                    else
+                    {
+                        foundChar = true;
+                    }
+                }
+                if (ignored.Length > 0)
+                {
+                    foreach (Line line in Lines)
+                    {
+                        if (line.Tokens.Count > 0 && line.Tokens[0].TokenType == TokenType.Text && ((Text)line.Tokens[0]).Content.StartsWith(ignored.ToString()))
+                        {
+                            string content = ((Text)line.Tokens[0]).Content.Replace(ignored.ToString(), string.Empty);
+                            Text text = new Text();
+                            foreach (char ch in content)
+                            {
+                                text.Append(ch);
+                            }
+                            line.Tokens[0] = text;
+                        }
+                    }
+                }
+            }
         }
 
         private void Parse(bool showException, string str)

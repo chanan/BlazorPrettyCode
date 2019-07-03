@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\BlazorPrettyCode\BlazorPrettyCode.csproj" />
+    <ProjectReference Include="..\BlazorPrettyCode\BlazorPrettyCode.csproj" />
   </ItemGroup>
 
 </Project>

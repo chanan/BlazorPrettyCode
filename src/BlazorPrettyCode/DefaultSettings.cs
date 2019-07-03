@@ -8,5 +8,6 @@
         public bool ShowException { get; set; } = true;
         public bool ShowCollapse { get; set; } = false;
         public bool IsCollapsed { get; set; } = false;
+        public bool AttemptToFixTabs { get; set; } = true;
     }
 }
