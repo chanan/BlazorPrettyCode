@@ -71,7 +71,7 @@ namespace BlazorPrettyCode
         [Inject] protected IStyled Styled { get; set; }
         [Inject] protected DefaultSettings DefaultConfig { get; set; }
         [Inject] protected IJSRuntime JSRuntime { get; set; }
-
+        private bool FirstRun = true;
         protected override async Task OnInitAsync()
         {
             bool debug = Debug ?? DefaultConfig.IsDevelopmentMode;
@@ -112,7 +112,7 @@ namespace BlazorPrettyCode
 
         protected override async Task OnAfterRenderAsync()
         {
-            if (!_clientSide)
+            if (!_clientSide && FirstRun)
             {
                 await InitCSS();
                 await InitThemeCss();
