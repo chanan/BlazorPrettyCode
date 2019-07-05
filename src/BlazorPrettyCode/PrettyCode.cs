@@ -117,6 +117,7 @@ namespace BlazorPrettyCode
                 await InitCSS();
                 await InitThemeCss();
                 StateHasChanged();
+                FirstRun = false;
             }
         }
 
