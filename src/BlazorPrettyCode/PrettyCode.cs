@@ -38,6 +38,7 @@ namespace BlazorPrettyCode
         private List<int> _highlightLines = new List<int>();
         private int _lineNum = 1;
         private bool _clientSide = true;
+        private bool _firstRun = true;
 
         //Config variables
         private bool _showLineNumbers;
@@ -71,7 +72,7 @@ namespace BlazorPrettyCode
         [Inject] protected IStyled Styled { get; set; }
         [Inject] protected DefaultSettings DefaultConfig { get; set; }
         [Inject] protected IJSRuntime JSRuntime { get; set; }
-        private bool FirstRun = true;
+
         protected override async Task OnInitAsync()
         {
             bool debug = Debug ?? DefaultConfig.IsDevelopmentMode;
@@ -87,13 +88,17 @@ namespace BlazorPrettyCode
                 PrintToConsole();
             }
 
-            _clientSide = JSRuntime is IJSInProcessRuntime;
+            /*
+             * This would be the prefered way to test for client side but didnt work
+             * Instead using the try/catch below
+             * 
+             * _clientSide = JSRuntime is IJSInProcessRuntime;
 
             if (_clientSide)
             {
                 await InitCSS();
                 await InitThemeCss();
-            }
+            }*/
 
             try
             {
@@ -112,12 +117,12 @@ namespace BlazorPrettyCode
 
         protected override async Task OnAfterRenderAsync()
         {
-            if (!_clientSide && FirstRun)
+            if (!_clientSide && _firstRun)
             {
                 await InitCSS();
                 await InitThemeCss();
                 StateHasChanged();
-                FirstRun = false;
+                _firstRun = false;
             }
         }
 
