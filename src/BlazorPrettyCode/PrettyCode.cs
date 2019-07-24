@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Text.Json.Serialization;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -252,7 +252,7 @@ namespace BlazorPrettyCode
 
             string strJson = await HttpClient.GetStringAsync(uri);
 
-            Theme theme = JsonSerializer.Parse<Theme>(strJson);
+            Theme theme = JsonSerializer.Deserialize<Theme>(strJson);
             _showLineNumbers = ShowLineNumbers ?? DefaultConfig.ShowLineNumbers;
 
             foreach (string font in getFonts(theme))
