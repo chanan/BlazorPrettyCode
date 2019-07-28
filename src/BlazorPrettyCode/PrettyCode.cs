@@ -4,7 +4,6 @@ using CSHTMLTokenizer;
 using CSHTMLTokenizer.Tokens;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.RenderTree;
-using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,12 +32,9 @@ namespace BlazorPrettyCode
         [Parameter] private bool? AttemptToFixTabs { get; set; } = null;
 
         private List<Line> Lines { get; set; } = new List<Line>();
-        private bool _isInitDone = false;
         private int i = 0;
         private List<int> _highlightLines = new List<int>();
         private int _lineNum = 1;
-        private bool _clientSide = true;
-        private bool _firstRun = true;
 
         //Config variables
         private bool _showLineNumbers;
@@ -71,10 +67,12 @@ namespace BlazorPrettyCode
         [Inject] protected HttpClient HttpClient { get; set; }
         [Inject] protected IStyled Styled { get; set; }
         [Inject] protected DefaultSettings DefaultConfig { get; set; }
-        [Inject] protected IJSRuntime JSRuntime { get; set; }
+
+        private IStyled _styled;
 
         protected override async Task OnInitAsync()
         {
+            _styled = Styled.WithId("pretty-code");
             bool debug = Debug ?? DefaultConfig.IsDevelopmentMode;
             bool showException = ShowException ?? DefaultConfig.ShowException;
             _showCollapse = ShowCollapse ?? DefaultConfig.ShowCollapse;
@@ -88,42 +86,8 @@ namespace BlazorPrettyCode
                 PrintToConsole();
             }
 
-            /*
-             * This would be the prefered way to test for client side but didnt work
-             * Instead using the try/catch below
-             * 
-             * _clientSide = JSRuntime is IJSInProcessRuntime;
-
-            if (_clientSide)
-            {
-                await InitCSS();
-                await InitThemeCss();
-            }*/
-
-            try
-            {
-                await InitCSS();
-                await InitThemeCss();
-            }
-            catch (Exception)
-            {
-                _clientSide = false;
-            }
-            finally
-            {
-                _isInitDone = true;
-            }
-        }
-
-        protected override async Task OnAfterRenderAsync()
-        {
-            if (!_clientSide && _firstRun)
-            {
-                await InitCSS();
-                await InitThemeCss();
-                StateHasChanged();
-                _firstRun = false;
-            }
+            InitCSS();
+            await InitThemeCss();
         }
 
         private async Task InitSourceFile(bool showException)
@@ -257,31 +221,31 @@ namespace BlazorPrettyCode
 
             foreach (string font in getFonts(theme))
             {
-                await Styled.Fontface(font);
+                _styled.Fontface(font);
             }
 
-            _themePreClass = await Styled.Css(getThemeValues(theme));
-            _themeTagSymbolsClass = await Styled.Css(getThemeValues(theme, "Tag symbols"));
-            _themeTagNameClass = await Styled.Css(getThemeValues(theme, "Tag name"));
-            _themeAttributeNameClass = await Styled.Css(getThemeValues(theme, "Attribute name"));
-            _themeAttributeValueClass = await Styled.Css(getThemeValues(theme, "Attribute value"));
-            _themeQuotedStringClass = await Styled.Css(getThemeValues(theme, "String"));
-            _themeRazorKeywordClass = await Styled.Css(getThemeValues(theme, "Razor Keyword"));
-            _themeTextClass = await Styled.Css(getThemeValues(theme, "Text"));
+            _themePreClass = _styled.Css(getThemeValues(theme));
+            _themeTagSymbolsClass = _styled.Css(getThemeValues(theme, "Tag symbols"));
+            _themeTagNameClass = _styled.Css(getThemeValues(theme, "Tag name"));
+            _themeAttributeNameClass = _styled.Css(getThemeValues(theme, "Attribute name"));
+            _themeAttributeValueClass = _styled.Css(getThemeValues(theme, "Attribute value"));
+            _themeQuotedStringClass = _styled.Css(getThemeValues(theme, "String"));
+            _themeRazorKeywordClass = _styled.Css(getThemeValues(theme, "Razor Keyword"));
+            _themeTextClass = _styled.Css(getThemeValues(theme, "Text"));
 
             _highlightLines = GetLineNumbers(HighlightLines);
             if (_highlightLines.Count > 0)
             {
-                _themeRowHighlight = await Styled.Css(getThemeValues(theme, "Row Highlight"));
+                _themeRowHighlight = _styled.Css(getThemeValues(theme, "Row Highlight"));
             }
         }
 
-        private async Task InitCSS()
+        private void InitCSS()
         {
-            _basePreClass = await Styled.Css(@"
+            _basePreClass = _styled.Css(@"
                 display: table;
                 table-layout: fixed;
-                width: 100%; /* anything but auto, otherwise fixed layout not guaranteed */
+                width: 100%;
                 white-space: pre-wrap;
                 -webkit-border-radius: 5px;
                 @media only screen and (min-width: 320px) and (max-width: 480px) {
@@ -297,12 +261,12 @@ namespace BlazorPrettyCode
 
             //Code Row
 
-            _baseRowSpan = await Styled.Css(@"
+            _baseRowSpan = _styled.Css(@"
                 display: table-row;
                 counter-increment: linenum;
             ");
 
-            _baseLineNumbersCell = await Styled.Css(@"
+            _baseLineNumbersCell = _styled.Css(@"
                 display: table-cell;
                 user-select: none;
                 -moz-user-select: none;
@@ -318,18 +282,18 @@ namespace BlazorPrettyCode
                 }
             ");
 
-            _baseCodeCell = await Styled.Css(@"
+            _baseCodeCell = _styled.Css(@"
                 display: table-cell;
                 padding-left: 1em;
             ");
 
             //Title Row
 
-            _baseRowSpanTitle = await Styled.Css(@"
+            _baseRowSpanTitle = _styled.Css(@"
                 display: table-row;
             ");
 
-            _baseCellSpacer = await Styled.Css(@"
+            _baseCellSpacer = _styled.Css(@"
                 display: table-cell;
                 user-select: none;
                 -moz-user-select: none;
@@ -340,7 +304,7 @@ namespace BlazorPrettyCode
                 border-bottom-color: rgb(223, 225, 230);
             ");
 
-            _baseCellTitle = await Styled.Css(@"
+            _baseCellTitle = _styled.Css(@"
                 display: table-cell;
                 padding: 0.4em 1em 0.4em;
                 font-weight: bold;
@@ -351,7 +315,7 @@ namespace BlazorPrettyCode
 
             // Expand / Collapse
 
-            _baseCollapse = await Styled.Css(@"
+            _baseCollapse = _styled.Css(@"
                 font-weight: normal;
                 font-size: 0.8em;
                 display: table-cell;
@@ -486,7 +450,6 @@ namespace BlazorPrettyCode
         private void PrintToConsole()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("ToHtml: ");
             foreach (Line line in Lines)
             {
                 sb.Append(line.ToHtml());
@@ -501,12 +464,6 @@ namespace BlazorPrettyCode
 
         protected override void BuildRenderTree(RenderTreeBuilder builder)
         {
-            base.BuildRenderTree(builder);
-            if (!_isInitDone)
-            {
-                return;
-            }
-
             builder.OpenElement(Next(), "pre");
             builder.AddAttribute(Next(), "class", _basePreClass + " " + _themePreClass);
             if (!string.IsNullOrWhiteSpace(Title) || _showCollapse)

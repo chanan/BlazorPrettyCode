@@ -11,7 +11,8 @@ namespace BlazorPrettyCode
             DefaultSettings defaultSettingsObj = new DefaultSettings();
             defaultSettings(defaultSettingsObj);
             serviceCollection.AddSingleton(defaultSettingsObj);
-            return serviceCollection.AddBlazorStyled(defaultSettingsObj.IsDevelopmentMode);
+            serviceCollection.AddBlazorStyled();
+            return serviceCollection;
         }
 
         public static IServiceCollection AddBlazorPrettyCode(this IServiceCollection serviceCollection)

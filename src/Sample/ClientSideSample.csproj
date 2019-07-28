@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BlazorPrettyCode\BlazorPrettyCode.csproj" />
+    <ProjectReference Include="..\SamplePages\SamplePages.csproj" />
   </ItemGroup>
 
 </Project>

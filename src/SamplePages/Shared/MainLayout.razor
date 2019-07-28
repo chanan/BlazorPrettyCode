@@ -1,0 +1,21 @@
+@inherits LayoutComponentBase
+@inject IStyled Styled
+@inject IMixins Mixins
+
+<div class="@main">
+    @Body
+</div>
+
+@functions {
+    private string main;
+
+    protected override void OnInit()
+    {
+        Styled.Css(Mixins.Normalize());
+
+        main = Styled.Css(@"
+        max-width: 1200px;
+        margin: 0 auto;
+    ");
+    }
+}

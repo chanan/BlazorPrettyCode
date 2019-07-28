@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Polished;
 using System;
 using System.Linq;
 using System.Net.Http;
@@ -43,6 +44,8 @@ namespace ServerSideSample
             }
 
             services.AddBlazorPrettyCode();
+            services.AddSingleton<IMixins, Mixins>();
+            services.AddSingleton<IShorthand, Shorthand>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
