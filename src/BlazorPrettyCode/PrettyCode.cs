@@ -51,8 +51,8 @@ namespace BlazorPrettyCode
         private string _themeQuotedStringClass;
         private string _themeRazorKeywordClass;
         private string _themeTextClass;
-
         private string _themeRowHighlight;
+        private string _themeRowHighlightBorder;
 
         //Non Theme css
         private string _basePreClass;
@@ -219,24 +219,27 @@ namespace BlazorPrettyCode
             Theme theme = JsonSerializer.Deserialize<Theme>(strJson);
             _showLineNumbers = ShowLineNumbers ?? DefaultConfig.ShowLineNumbers;
 
-            foreach (string font in getFonts(theme))
-            {
-                _styled.Fontface(font);
-            }
+            _styled.AddGoogleFonts(GetFonts(theme));
 
-            _themePreClass = _styled.Css(getThemeValues(theme));
-            _themeTagSymbolsClass = _styled.Css(getThemeValues(theme, "Tag symbols"));
-            _themeTagNameClass = _styled.Css(getThemeValues(theme, "Tag name"));
-            _themeAttributeNameClass = _styled.Css(getThemeValues(theme, "Attribute name"));
-            _themeAttributeValueClass = _styled.Css(getThemeValues(theme, "Attribute value"));
-            _themeQuotedStringClass = _styled.Css(getThemeValues(theme, "String"));
-            _themeRazorKeywordClass = _styled.Css(getThemeValues(theme, "Razor Keyword"));
-            _themeTextClass = _styled.Css(getThemeValues(theme, "Text"));
+            _themePreClass = _styled.Css(GetThemeValues(theme));
+            _themeTagSymbolsClass = _styled.Css(GetThemeValues(theme, "Tag symbols"));
+            _themeTagNameClass = _styled.Css(GetThemeValues(theme, "Tag name"));
+            _themeAttributeNameClass = _styled.Css(GetThemeValues(theme, "Attribute name"));
+            _themeAttributeValueClass = _styled.Css(GetThemeValues(theme, "Attribute value"));
+            _themeQuotedStringClass = _styled.Css(GetThemeValues(theme, "String"));
+            _themeRazorKeywordClass = _styled.Css(GetThemeValues(theme, "Razor Keyword"));
+            _themeTextClass = _styled.Css(GetThemeValues(theme, "Text"));
 
             _highlightLines = GetLineNumbers(HighlightLines);
             if (_highlightLines.Count > 0)
             {
-                _themeRowHighlight = _styled.Css(getThemeValues(theme, "Row Highlight"));
+                _themeRowHighlight = _styled.Css(GetThemeValues(theme, "Row Highlight"));
+
+                IDictionary<string, string> dictionary = GetThemeValuesDictionary(theme, "Row Highlight");
+                StringBuilder sb = new StringBuilder();
+                string color = dictionary.ContainsKey("background-color") ? dictionary["background-color"] : "rgba(0, 0, 0, 0.9)";
+                string border = $"border-left: 0.5rem solid {color};";
+                _themeRowHighlightBorder = _styled.Css(border);
             }
         }
 
@@ -382,29 +385,29 @@ namespace BlazorPrettyCode
             return list;
         }
 
-        private List<string> getFonts(Theme theme)
+        private List<GoogleFont> GetFonts(Theme theme)
         {
-            List<string> list = new List<string>();
+            List<GoogleFont> list = new List<GoogleFont>();
             List<Setting> fonts = (from s in theme.Settings
                                    where s.Name != null && s.Name.ToLower() == "font"
                                    select s).ToList();
 
             foreach (Setting font in fonts)
             {
-                StringBuilder sb = new StringBuilder();
-                foreach (KeyValuePair<string, string> kvp in font.Settings)
+                GoogleFont googleFont = new GoogleFont
                 {
-                    sb.Append(kvp.Key).Append(':').Append(kvp.Value).Append(';');
-                }
-                list.Add(sb.ToString());
+                    Name = font.Settings["font-family"],
+                    Styles = font.Settings["font-weight"].Split(',').ToList()
+                };
+                list.Add(googleFont);
             }
 
             return list;
         }
 
-        private string getThemeValues(Theme theme, string setting = null)
+        private IDictionary<string, string> GetThemeValuesDictionary(Theme theme, string setting = null)
         {
-            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+            IDictionary<string, string> dictionary = new Dictionary<string, string>();
             Setting settings = (from s in theme.Settings
                                 where s.Name == null
                                 select s).SingleOrDefault();
@@ -438,7 +441,12 @@ namespace BlazorPrettyCode
                     }
                 }
             }
+            return dictionary;
+        }
 
+        private string GetThemeValues(Theme theme, string setting = null)
+        {
+            IDictionary<string, string> dictionary = GetThemeValuesDictionary(theme, setting);
             StringBuilder sb = new StringBuilder();
             foreach (KeyValuePair<string, string> kvp in dictionary)
             {
@@ -513,6 +521,7 @@ namespace BlazorPrettyCode
         private void BuildRenderLine(RenderTreeBuilder builderLine, Line line)
         {
             string highlightClass = _highlightLines.Contains(_lineNum) ? " " + _themeRowHighlight : string.Empty;
+            string highlightClassBorder = _highlightLines.Contains(_lineNum) && !_showLineNumbers ? " " + _themeRowHighlightBorder : string.Empty;
             builderLine.OpenElement(Next(), "span");
             builderLine.AddAttribute(Next(), "class", _baseRowSpan);
             if (_showLineNumbers)
@@ -522,7 +531,7 @@ namespace BlazorPrettyCode
                 builderLine.CloseElement();
             }
             builderLine.OpenElement(Next(), "code");
-            builderLine.AddAttribute(Next(), "class", _baseCodeCell);
+            builderLine.AddAttribute(Next(), "class", _baseCodeCell + highlightClassBorder);
             builderLine.AddContent(Next(), builderMain => BuildRenderMain(builderMain, line));
             if (!line.LastLine)
             {
