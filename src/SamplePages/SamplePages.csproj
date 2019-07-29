@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BlazorStyled" Version="1.0.0-preview7-03" />
     <PackageReference Include="Polished" Version="1.0.0-preview-02" />
   </ItemGroup>
 
