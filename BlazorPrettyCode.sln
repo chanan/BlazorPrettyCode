@@ -9,9 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClientSideSample", "src\Sam
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServerSideSample", "src\ServerSideSample\ServerSideSample.csproj", "{2948E206-4EE8-4FE8-9A97-5D0A59E22661}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorStyled", "..\BlazorStyled\src\BlazorStyled\BlazorStyled.csproj", "{CB365D63-1EA2-4094-8A81-FE36FD70FB70}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamplePages", "src\SamplePages\SamplePages.csproj", "{36CE32DC-CBEA-4394-AB73-BADB5D7F821F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SamplePages", "src\SamplePages\SamplePages.csproj", "{36CE32DC-CBEA-4394-AB73-BADB5D7F821F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,10 +29,6 @@ Global
 		{2948E206-4EE8-4FE8-9A97-5D0A59E22661}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2948E206-4EE8-4FE8-9A97-5D0A59E22661}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2948E206-4EE8-4FE8-9A97-5D0A59E22661}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CB365D63-1EA2-4094-8A81-FE36FD70FB70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CB365D63-1EA2-4094-8A81-FE36FD70FB70}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CB365D63-1EA2-4094-8A81-FE36FD70FB70}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CB365D63-1EA2-4094-8A81-FE36FD70FB70}.Release|Any CPU.Build.0 = Release|Any CPU
 		{36CE32DC-CBEA-4394-AB73-BADB5D7F821F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{36CE32DC-CBEA-4394-AB73-BADB5D7F821F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{36CE32DC-CBEA-4394-AB73-BADB5D7F821F}.Release|Any CPU.ActiveCfg = Release|Any CPU

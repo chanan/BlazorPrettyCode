@@ -20,13 +20,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BlazorStyled" Version="1.0.0-preview7-03" />
     <PackageReference Include="CSHTMLTokenizer" Version="0.7.3" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Browser" Version="3.0.0-preview7.19365.7" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\BlazorStyled\src\BlazorStyled\BlazorStyled.csproj" />
   </ItemGroup>
 
 </Project>
