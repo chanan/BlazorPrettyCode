@@ -63,6 +63,7 @@ namespace BlazorPrettyCode
         private string _baseCellSpacer;
         private string _baseCellTitle;
         private string _baseCollapse;
+        private string _baseDiv;
 
         [Inject] protected HttpClient HttpClient { get; set; }
         [Inject] protected IStyled Styled { get; set; }
@@ -221,6 +222,15 @@ namespace BlazorPrettyCode
 
             _styled.AddGoogleFonts(GetFonts(theme));
 
+            StringBuilder sb = new StringBuilder();
+            sb.Append("overflow-y: auto;");
+            IDictionary<string, string> settings = GetThemeValuesDictionary(theme);
+            if (settings.ContainsKey("background-color"))
+            {
+                sb.Append("background-color: ").Append(settings["background-color"]).Append(';');
+            }
+
+            _baseDiv = _styled.Css(sb.ToString());
             _themePreClass = _styled.Css(GetThemeValues(theme));
             _themeTagSymbolsClass = _styled.Css(GetThemeValues(theme, "Tag symbols"));
             _themeTagNameClass = _styled.Css(GetThemeValues(theme, "Tag name"));
@@ -236,7 +246,6 @@ namespace BlazorPrettyCode
                 _themeRowHighlight = _styled.Css(GetThemeValues(theme, "Row Highlight"));
 
                 IDictionary<string, string> dictionary = GetThemeValuesDictionary(theme, "Row Highlight");
-                StringBuilder sb = new StringBuilder();
                 string color = dictionary.ContainsKey("background-color") ? dictionary["background-color"] : "rgba(0, 0, 0, 0.9)";
                 string border = $"border-left: 0.5rem solid {color};";
                 _themeRowHighlightBorder = _styled.Css(border);
@@ -249,7 +258,6 @@ namespace BlazorPrettyCode
                 display: table;
                 table-layout: fixed;
                 width: 100%;
-                white-space: pre-wrap;
                 -webkit-border-radius: 5px;
                 @media only screen and (min-width: 320px) and (max-width: 480px) {
                     font-size: 50%;
@@ -472,6 +480,8 @@ namespace BlazorPrettyCode
 
         protected override void BuildRenderTree(RenderTreeBuilder builder)
         {
+            builder.OpenElement(Next(), "div");
+            builder.AddAttribute(Next(), "class", _baseDiv);
             builder.OpenElement(Next(), "pre");
             builder.AddAttribute(Next(), "class", _basePreClass + " " + _themePreClass);
             if (!string.IsNullOrWhiteSpace(Title) || _showCollapse)
@@ -485,6 +495,7 @@ namespace BlazorPrettyCode
                     builder.AddContent(Next(), builderLine => BuildRenderLine(builderLine, line));
                 }
             }
+            builder.CloseElement();
             builder.CloseElement();
         }
 
