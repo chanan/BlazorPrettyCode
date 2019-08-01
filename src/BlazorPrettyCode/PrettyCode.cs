@@ -116,7 +116,7 @@ namespace BlazorPrettyCode
 
             string str = string.IsNullOrWhiteSpace(codeSectionFileLinesString) ? codeFileLinesString : codeFileLinesString + '\n' + codeSectionFileLinesString;
 
-            Parse(showException, str);
+            Parse(showException, str.TrimEnd());
 
             if (_attemptToFixTabs)
             {
@@ -147,8 +147,9 @@ namespace BlazorPrettyCode
                     {
                         if (line.Tokens.Count > 0 && line.Tokens[0].TokenType == TokenType.Text && ((Text)line.Tokens[0]).Content.StartsWith(ignored.ToString()))
                         {
-                            string content = ((Text)line.Tokens[0]).Content.Replace(ignored.ToString(), string.Empty);
+                            string content = ((Text)line.Tokens[0]).Content.ReplaceFirst(ignored.ToString(), "");
                             Text text = new Text();
+                            var i = 0;
                             foreach (char ch in content)
                             {
                                 text.Append(ch);
