@@ -1,7 +1,7 @@
 using BlazorPrettyCode;
+using BlazorTypography;
 using Microsoft.AspNetCore.Components.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Polished;
 using SamplePages;
 
 namespace Sample
@@ -11,8 +11,7 @@ namespace Sample
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddBlazorPrettyCode();
-            services.AddSingleton<IMixins, Mixins>();
-            services.AddSingleton<IShorthand, Shorthand>();
+            services.AddTypography();
         }
 
         public void Configure(IComponentsApplicationBuilder app)

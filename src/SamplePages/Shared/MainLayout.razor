@@ -1,6 +1,10 @@
 @inherits LayoutComponentBase
-@inject IStyled Styled
-@inject IMixins Mixins
+@inject ITypography Typography
+
+<Styled @bind-Classname="@main">
+    max-width: 1200px;
+    margin: 0 auto;
+</Styled>
 
 <div class="@main">
     @Body
@@ -11,11 +15,7 @@
 
     protected override void OnInit()
     {
-        Styled.Css(Mixins.Normalize());
-
-        main = Styled.Css(@"
-        max-width: 1200px;
-        margin: 0 auto;
-    ");
+        DefaultTypographyOptions defaultTheme = new DefaultTypographyOptions();
+        Typography.ApplyTypography(defaultTheme);
     }
 }

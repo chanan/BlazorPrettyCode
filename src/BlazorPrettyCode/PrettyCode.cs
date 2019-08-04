@@ -296,6 +296,12 @@ namespace BlazorPrettyCode
             _baseCodeCell = _styled.Css(@"
                 display: table-cell;
                 padding-left: 1em;
+                @media only screen and (min-width: 320px) and (max-width: 480px) {
+                    font-size: 50%;
+                }
+                @media (min-width: 481px) and (max-width: 1223px) {
+                    font-size: 80%;
+                }
             ");
 
             //Title Row
@@ -673,7 +679,7 @@ namespace BlazorPrettyCode
             builder.CloseElement();
 
             builder.OpenElement(Next(), "span");
-            //builder.AddAttribute(Next(), "class", _textClass);
+            builder.AddAttribute(Next(), "class", _themeTextClass);
             builder.AddContent(Next(), csLine.Line);
             builder.CloseElement();
         }

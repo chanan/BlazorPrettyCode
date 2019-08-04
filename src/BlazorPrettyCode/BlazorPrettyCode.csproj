@@ -11,7 +11,7 @@
     <RazorLangVersion>3.0</RazorLangVersion>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <PackageId>BlazorPrettyCode</PackageId>
-    <Version>1.0.0-preview7-03</Version>
+    <Version>1.0.0-preview7-05</Version>
     <Authors>Chanan Braunstein</Authors>
     <Title>Blazor PrettyCode</Title>
     <Description>Razor Code Display Component</Description>
@@ -20,7 +20,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CSHTMLTokenizer" Version="0.7.3" />
+    <PackageReference Include="BlazorStyled" Version="1.0.0-preview7-04" />
+    <PackageReference Include="CSHTMLTokenizer" Version="0.7.4" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Browser" Version="3.0.0-preview7.19365.7" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
   </ItemGroup>
@@ -31,9 +32,5 @@
     <EmbeddedResource Include="wwwroot\**\*.css" LogicalName="blazor:css:%(RecursiveDir)%(Filename)%(Extension)" />
     <EmbeddedResource Include="wwwroot\**" Exclude="**\*.js;**\*.css" LogicalName="blazor:file:%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  
-    <ItemGroup>
-      <ProjectReference Include="..\..\..\BlazorStyled\src\BlazorStyled\BlazorStyled.csproj" />
-    </ItemGroup>
 
 </Project>
