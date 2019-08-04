@@ -1,4 +1,5 @@
 using BlazorPrettyCode;
+using BlazorTypography;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
@@ -44,6 +45,7 @@ namespace ServerSideSample
             }
 
             services.AddBlazorPrettyCode();
+            services.AddTypography();
             services.AddSingleton<IMixins, Mixins>();
             services.AddSingleton<IShorthand, Shorthand>();
         }
