@@ -149,7 +149,6 @@ namespace BlazorPrettyCode
                         {
                             string content = ((Text)line.Tokens[0]).Content.ReplaceFirst(ignored.ToString(), "");
                             Text text = new Text();
-                            var i = 0;
                             foreach (char ch in content)
                             {
                                 text.Append(ch);
@@ -218,7 +217,7 @@ namespace BlazorPrettyCode
 
             string strJson = await HttpClient.GetStringAsync(uri);
 
-            Theme theme = JsonSerializer.Deserialize<Theme>(strJson);
+            Themes.Theme theme = JsonSerializer.Deserialize<Themes.Theme>(strJson);
             _showLineNumbers = ShowLineNumbers ?? DefaultConfig.ShowLineNumbers;
 
             _styled.AddGoogleFonts(GetFonts(theme));
@@ -394,7 +393,7 @@ namespace BlazorPrettyCode
             return list;
         }
 
-        private List<GoogleFont> GetFonts(Theme theme)
+        private List<GoogleFont> GetFonts(Themes.Theme theme)
         {
             List<GoogleFont> list = new List<GoogleFont>();
             List<Setting> fonts = (from s in theme.Settings
@@ -414,7 +413,7 @@ namespace BlazorPrettyCode
             return list;
         }
 
-        private IDictionary<string, string> GetThemeValuesDictionary(Theme theme, string setting = null)
+        private IDictionary<string, string> GetThemeValuesDictionary(Themes.Theme theme, string setting = null)
         {
             IDictionary<string, string> dictionary = new Dictionary<string, string>();
             Setting settings = (from s in theme.Settings
@@ -453,7 +452,7 @@ namespace BlazorPrettyCode
             return dictionary;
         }
 
-        private string GetThemeValues(Theme theme, string setting = null)
+        private string GetThemeValues(Themes.Theme theme, string setting = null)
         {
             IDictionary<string, string> dictionary = GetThemeValuesDictionary(theme, setting);
             StringBuilder sb = new StringBuilder();
