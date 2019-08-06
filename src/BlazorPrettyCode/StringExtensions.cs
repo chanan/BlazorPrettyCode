@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace BlazorPrettyCode
+﻿namespace BlazorPrettyCode
 {
     internal static class StringExtensions
     {

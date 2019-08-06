@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="BlazorStyled" Version="1.0.0-preview7-05" />
-    <PackageReference Include="BlazorTypography" Version="1.0.0-preview7-05" />
+    <PackageReference Include="BlazorTypography" Version="1.0.0-preview7-06" />
   </ItemGroup>
 
   <ItemGroup>
