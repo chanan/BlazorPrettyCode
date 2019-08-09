@@ -30,17 +30,22 @@ namespace BlazorPrettyCode
         [Parameter] private string Title { get; set; } = null;
         [Parameter] private bool? IsCollapsed { get; set; } = null;
         [Parameter] private bool? AttemptToFixTabs { get; set; } = null;
+        [Parameter] private bool? KeepOriginalLineNumbers { get; set; } = false;
 
         private List<Line> Lines { get; set; } = new List<Line>();
         private int i = 0;
         private List<int> _highlightLines = new List<int>();
         private int _lineNum = 1;
+        private List<int> _lineNumbers;
+        private List<int> _codeLineNumbers;
+        private bool _addedCodeString;
 
         //Config variables
         private bool _showLineNumbers;
         private bool _showCollapse;
         private bool _isCollapsed;
         private bool _attemptToFixTabs;
+        private bool _KeepOriginalLineNumbers;
 
         //Theme css
         private string _themePreClass;
@@ -80,6 +85,7 @@ namespace BlazorPrettyCode
             _showCollapse = ShowCollapse ?? DefaultConfig.ShowCollapse;
             _isCollapsed = IsCollapsed ?? DefaultConfig.IsCollapsed;
             _attemptToFixTabs = AttemptToFixTabs ?? DefaultConfig.AttemptToFixTabs;
+            _KeepOriginalLineNumbers = KeepOriginalLineNumbers ?? DefaultConfig.KeepOriginalLineNumbers;
 
             await InitSourceFile(showException);
 
@@ -95,7 +101,8 @@ namespace BlazorPrettyCode
         private async Task InitSourceFile(bool showException)
         {
             string CodeFileString = await GetFromCacheOrNetwork(CodeFile);
-            string codeFileLinesString = GetLines(CodeFileString, CodeFileLineNumbers);
+            _lineNumbers = GetLineNumbers(CodeFileLineNumbers);
+            string codeFileLinesString = GetLines(CodeFileString, _lineNumbers);
             string codeSectionFileLinesString = string.Empty;
             if (!string.IsNullOrWhiteSpace(CodeSectionFile) || !string.IsNullOrWhiteSpace(CodeSectionFileLineNumbers))
             {
@@ -108,10 +115,17 @@ namespace BlazorPrettyCode
                 {
                     codeSectionString = CodeFileString;
                 }
-                codeSectionFileLinesString = GetLines(codeSectionString, CodeSectionFileLineNumbers);
+                _codeLineNumbers = GetLineNumbers(CodeSectionFileLineNumbers);
+                codeSectionFileLinesString = GetLines(codeSectionString, _codeLineNumbers);
+                
                 if (!codeSectionFileLinesString.StartsWith("@code"))
                 {
                     codeSectionFileLinesString = $"@code {{\n{codeSectionFileLinesString}}}";
+                    _addedCodeString = true;
+                    List<int> temp = new List<int> { _codeLineNumbers.First() - 1 };
+                    temp.AddRange(_codeLineNumbers);
+                    _codeLineNumbers = temp;
+                    _codeLineNumbers.Add(_codeLineNumbers.Last() + 1);
                 }
             }
 
@@ -187,7 +201,8 @@ namespace BlazorPrettyCode
                     {
                         if (te.LineNumber != 0)
                         {
-                            string context = GetLines(str, te.LineNumber.ToString());
+                            List<int> lines = GetLineNumbers(te.LineNumber.ToString());
+                            string context = GetLines(str, lines);
                             line = new Line() { Tokens = new List<IToken> { new Text() } };
                             foreach (char ch in context)
                             {
@@ -266,26 +281,25 @@ namespace BlazorPrettyCode
 
         private void InitCSS()
         {
-            _basePreClass = _styled.Css(@"
+            int num = _KeepOriginalLineNumbers ? _lineNumbers.First() - 1 : 0;
+            _basePreClass = _styled.Css($@"
                 label: pre;
                 display: table;
                 table-layout: fixed;
                 width: 100%;
                 -webkit-border-radius: 5px;
                 line-height: 1.5em;
-                @media only screen and (min-width: 320px) and (max-width: 480px) {
+                counter-reset: linenum {num};
+                @media only screen and (min-width: 320px) and (max-width: 480px) {{
                     font-size: 50%;
                     line-height: 1em;
                     margin-bottom: 0.25em;
-                }
-                @media (min-width: 481px) and (max-width: 1223px) {
+                }}
+                @media (min-width: 481px) and (max-width: 1223px) {{
                     font-size: 80%;
                     line-height: 1.25em;
                     margin-bottom: 0.5em;
-                }
-                &:before {
-                    counter-reset: linenum;
-                }
+                }}
             ");
 
             //Code Row
@@ -371,16 +385,15 @@ namespace BlazorPrettyCode
             ");
         }
 
-        private string GetLines(string str, string lineNumbers)
+        private string GetLines(string str, List<int> lineNumbers)
         {
-            List<int> codeFileLines = GetLineNumbers(lineNumbers);
-            if (codeFileLines.Count > 0)
+            if (lineNumbers.Count > 0)
             {
                 string[] arr = Regex.Split(str, "\r\n|\r|\n");
                 StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < arr.Length; i++)
                 {
-                    if (codeFileLines.Contains(i + 1))
+                    if (lineNumbers.Contains(i + 1))
                     {
                         sb.AppendLine(arr[i]);
                     }
@@ -566,8 +579,9 @@ namespace BlazorPrettyCode
         {
             string highlightClass = _highlightLines.Contains(_lineNum) ? " " + _themeRowHighlight : string.Empty;
             string highlightClassBorder = _highlightLines.Contains(_lineNum) && !_showLineNumbers ? " " + _themeRowHighlightBorder : string.Empty;
+            string lineNum = GetCounterReset();
             builderLine.OpenElement(Next(), "span");
-            builderLine.AddAttribute(Next(), "class", _baseRowSpan);
+            builderLine.AddAttribute(Next(), "class", _baseRowSpan + lineNum);
             if (_showLineNumbers)
             {
                 builderLine.OpenElement(Next(), "span");
@@ -585,6 +599,33 @@ namespace BlazorPrettyCode
             builderLine.CloseElement();
             builderLine.CloseElement();
             _lineNum++;
+        }
+
+        private string GetCounterReset()
+        {
+            try
+            {
+                if (!_KeepOriginalLineNumbers) return string.Empty;
+                if (_lineNumbers.Count >= _lineNum)
+                {
+                    return " " + Styled.Css($"counter-reset: linenum {_lineNumbers[_lineNum - 1] - 1};");
+                }
+                if (_addedCodeString && _lineNum == _lineNumbers.Count + 1)
+                {
+                    return string.Empty;
+                }
+                if (_lineNumbers.Count + _codeLineNumbers.Count >= _lineNum)
+                {
+                    int baseCount = _addedCodeString ? _lineNumbers.Count + 1 : _lineNumbers.Count;
+                    int offset = _addedCodeString ? 1 : 0;
+                    return " " + Styled.Css($"counter-reset: linenum {_codeLineNumbers[_lineNum - baseCount - 1] - offset};");
+                }
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
+            return String.Empty;
         }
 
         private void BuildRenderMain(RenderTreeBuilder builder, Line line)

@@ -9,5 +9,6 @@
         public bool ShowCollapse { get; set; } = false;
         public bool IsCollapsed { get; set; } = false;
         public bool AttemptToFixTabs { get; set; } = true;
+        public bool KeepOriginalLineNumbers { get; set; }
     }
 }
