@@ -267,15 +267,21 @@ namespace BlazorPrettyCode
         private void InitCSS()
         {
             _basePreClass = _styled.Css(@"
+                label: pre;
                 display: table;
                 table-layout: fixed;
                 width: 100%;
                 -webkit-border-radius: 5px;
+                line-height: 1.5em;
                 @media only screen and (min-width: 320px) and (max-width: 480px) {
                     font-size: 50%;
+                    line-height: 1em;
+                    margin-bottom: 0.25em;
                 }
                 @media (min-width: 481px) and (max-width: 1223px) {
                     font-size: 80%;
+                    line-height: 1.25em;
+                    margin-bottom: 0.5em;
                 }
                 &:before {
                     counter-reset: linenum;
@@ -285,11 +291,13 @@ namespace BlazorPrettyCode
             //Code Row
 
             _baseRowSpan = _styled.Css(@"
+                label: row;
                 display: table-row;
                 counter-increment: linenum;
             ");
 
             _baseLineNumbersCell = _styled.Css(@"
+                label: number-cell;
                 display: table-cell;
                 user-select: none;
                 -moz-user-select: none;
@@ -306,23 +314,29 @@ namespace BlazorPrettyCode
             ");
 
             _baseCodeCell = _styled.Css(@"
+                label: code-cell;
                 display: table-cell;
                 padding-left: 1em;
+                line-height: 1.5em;
                 @media only screen and (min-width: 320px) and (max-width: 480px) {
                     font-size: 50%;
+                    line-height: 1em;
                 }
                 @media (min-width: 481px) and (max-width: 1223px) {
                     font-size: 80%;
+                    line-height: 1.25em;
                 }
             ");
 
             //Title Row
 
             _baseRowSpanTitle = _styled.Css(@"
+                label: title-row;
                 display: table-row;
             ");
 
             _baseCellSpacer = _styled.Css(@"
+                label: cell-spacer;
                 display: table-cell;
                 user-select: none;
                 -moz-user-select: none;
@@ -334,6 +348,7 @@ namespace BlazorPrettyCode
             ");
 
             _baseCellTitle = _styled.Css(@"
+                label: cell-title;
                 display: table-cell;
                 padding: 0.4em 1em 0.4em;
                 font-weight: bold;
