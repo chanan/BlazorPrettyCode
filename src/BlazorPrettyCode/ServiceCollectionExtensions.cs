@@ -1,4 +1,5 @@
-﻿using BlazorStyled;
+﻿using BlazorPrettyCode.Themes;
+using BlazorStyled;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
@@ -11,6 +12,7 @@ namespace BlazorPrettyCode
             DefaultSettings defaultSettingsObj = new DefaultSettings();
             defaultSettings(defaultSettingsObj);
             serviceCollection.AddSingleton(defaultSettingsObj);
+            serviceCollection.AddSingleton<ThemeCache>();
             serviceCollection.AddBlazorStyled();
             return serviceCollection;
         }

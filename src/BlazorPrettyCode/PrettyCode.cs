@@ -65,9 +65,10 @@ namespace BlazorPrettyCode
         private string _baseCollapse;
         private string _baseDiv;
 
-        [Inject] protected HttpClient HttpClient { get; set; }
-        [Inject] protected IStyled Styled { get; set; }
-        [Inject] protected DefaultSettings DefaultConfig { get; set; }
+        [Inject] private HttpClient HttpClient { get; set; }
+        [Inject] private IStyled Styled { get; set; }
+        [Inject] private DefaultSettings DefaultConfig { get; set; }
+        [Inject] private ThemeCache ThemeCache { get; set; }
 
         private IStyled _styled;
 
@@ -93,7 +94,7 @@ namespace BlazorPrettyCode
 
         private async Task InitSourceFile(bool showException)
         {
-            string CodeFileString = await HttpClient.GetStringAsync(CodeFile);
+            string CodeFileString = await GetFromCacheOrNetwork(CodeFile);
             string codeFileLinesString = GetLines(CodeFileString, CodeFileLineNumbers);
             string codeSectionFileLinesString = string.Empty;
             if (!string.IsNullOrWhiteSpace(CodeSectionFile) || !string.IsNullOrWhiteSpace(CodeSectionFileLineNumbers))
@@ -101,7 +102,7 @@ namespace BlazorPrettyCode
                 string codeSectionString;
                 if (!string.IsNullOrWhiteSpace(CodeSectionFile))
                 {
-                    codeSectionString = await HttpClient.GetStringAsync(CodeSectionFile);
+                    codeSectionString = await GetFromCacheOrNetwork(CodeSectionFile);
                 }
                 else
                 {
@@ -122,6 +123,17 @@ namespace BlazorPrettyCode
             {
                 FixTabs();
             }
+        }
+
+        private async Task<string> GetFromCacheOrNetwork(string uri)
+        {
+            if (ThemeCache.Cache.TryGetValue(uri, out string result))
+            {
+                return result;
+            }
+            string str = await HttpClient.GetStringAsync(uri);
+            ThemeCache.Cache.TryAdd(uri, str);
+            return str;
         }
 
         private void FixTabs()
@@ -215,7 +227,7 @@ namespace BlazorPrettyCode
             string themeName = Theme ?? DefaultConfig.DefaultTheme;
             string uri = themeName.ToLower().StartsWith("http") ? themeName : "_content/BlazorPrettyCode/" + themeName + ".json";
 
-            string strJson = await HttpClient.GetStringAsync(uri);
+            string strJson = await GetFromCacheOrNetwork(uri);
 
             Themes.Theme theme = JsonSerializer.Deserialize<Themes.Theme>(strJson);
             _showLineNumbers = ShowLineNumbers ?? DefaultConfig.ShowLineNumbers;
