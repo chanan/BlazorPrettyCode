@@ -251,6 +251,7 @@ namespace BlazorPrettyCode
 
             StringBuilder sb = new StringBuilder();
             sb.Append("overflow-y: auto;");
+            sb.Append("margin-bottom: 1em;");
             IDictionary<string, string> settings = GetThemeValuesDictionary(theme);
             if (settings.ContainsKey("background-color"))
             {
