@@ -1,5 +1,5 @@
 @inherits LayoutComponentBase
-@inject ITypography Typography
+<Typography IncludeNormalize="true" />
 
 <Styled @bind-Classname="@main">
     max-width: 1200px;
@@ -10,12 +10,6 @@
     @Body
 </div>
 
-@functions {
+@code {
     private string main;
-
-    protected override void OnInit()
-    {
-        DefaultTypographyOptions defaultTheme = new DefaultTypographyOptions();
-        Typography.ApplyTypography(defaultTheme);
-    }
 }

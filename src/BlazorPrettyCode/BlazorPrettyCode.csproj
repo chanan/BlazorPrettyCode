@@ -2,16 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <IsPackable>true</IsPackable>
-    <RestoreAdditionalProjectSources>
-      https://dotnet.myget.org/F/aspnetcore-dev/api/v3/index.json;
-      https://dotnet.myget.org/F/blazor-dev/api/v3/index.json;
-    </RestoreAdditionalProjectSources>
+    <RazorLangVersion>3.0</RazorLangVersion>
     <LangVersion>7.3</LangVersion>
     <RazorLangVersion>3.0</RazorLangVersion>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <PackageId>BlazorPrettyCode</PackageId>
-    <Version>1.0.0-preview7-07</Version>
+    <Version>1.0.0-preview8-03</Version>
     <Authors>Chanan Braunstein</Authors>
     <Title>Blazor PrettyCode</Title>
     <Description>Razor Code Display Component</Description>
@@ -20,17 +16,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BlazorStyled" Version="1.0.0-preview7-05" />
-    <PackageReference Include="CSHTMLTokenizer" Version="0.7.4" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Browser" Version="3.0.0-preview7.19365.7" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="BlazorStyled" Version="1.0.0-preview8-02" />
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="3.0.0-preview8.19405.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="3.0.0-preview8.19405.7" />
   </ItemGroup>
-  
-    <ItemGroup>
-    <!-- .js/.css files will be referenced via <script>/<link> tags; other content files will just be included in the app's 'dist' directory without any tags referencing them -->
-    <EmbeddedResource Include="wwwroot\**\*.js" LogicalName="blazor:js:%(RecursiveDir)%(Filename)%(Extension)" />
-    <EmbeddedResource Include="wwwroot\**\*.css" LogicalName="blazor:css:%(RecursiveDir)%(Filename)%(Extension)" />
-    <EmbeddedResource Include="wwwroot\**" Exclude="**\*.js;**\*.css" LogicalName="blazor:file:%(RecursiveDir)%(Filename)%(Extension)" />
+
+  <ItemGroup>
+    <PackageReference Include="CSHTMLTokenizer" Version="0.7.4" />
   </ItemGroup>
 
 </Project>

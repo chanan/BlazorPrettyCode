@@ -17,20 +17,20 @@ namespace BlazorPrettyCode
 {
     public class PrettyCode : ComponentBase
     {
-        [Parameter] private bool? Debug { get; set; } = null;
-        [Parameter] private string CodeFile { get; set; }
-        [Parameter] private string CodeFileLineNumbers { get; set; }
-        [Parameter] private string CodeSectionFile { get; set; }
-        [Parameter] private string CodeSectionFileLineNumbers { get; set; }
-        [Parameter] private string Theme { get; set; }
-        [Parameter] private bool? ShowLineNumbers { get; set; } = null;
-        [Parameter] private string HighlightLines { get; set; }
-        [Parameter] private bool? ShowException { get; set; } = null;
-        [Parameter] private bool? ShowCollapse { get; set; } = null;
-        [Parameter] private string Title { get; set; } = null;
-        [Parameter] private bool? IsCollapsed { get; set; } = null;
-        [Parameter] private bool? AttemptToFixTabs { get; set; } = null;
-        [Parameter] private bool? KeepOriginalLineNumbers { get; set; } = false;
+        [Parameter] public bool? Debug { get; set; } = null;
+        [Parameter] public string CodeFile { get; set; }
+        [Parameter] public string CodeFileLineNumbers { get; set; }
+        [Parameter] public string CodeSectionFile { get; set; }
+        [Parameter] public string CodeSectionFileLineNumbers { get; set; }
+        [Parameter] public string Theme { get; set; }
+        [Parameter] public bool? ShowLineNumbers { get; set; } = null;
+        [Parameter] public string HighlightLines { get; set; }
+        [Parameter] public bool? ShowException { get; set; } = null;
+        [Parameter] public bool? ShowCollapse { get; set; } = null;
+        [Parameter] public string Title { get; set; } = null;
+        [Parameter] public bool? IsCollapsed { get; set; } = null;
+        [Parameter] public bool? AttemptToFixTabs { get; set; } = null;
+        [Parameter] public bool? KeepOriginalLineNumbers { get; set; } = false;
 
         private List<Line> Lines { get; set; } = new List<Line>();
         private int i = 0;
@@ -77,7 +77,7 @@ namespace BlazorPrettyCode
 
         private IStyled _styled;
 
-        protected override async Task OnInitAsync()
+        protected override async Task OnInitializedAsync()
         {
             _styled = Styled.WithId("pretty-code");
             bool debug = Debug ?? DefaultConfig.IsDevelopmentMode;
