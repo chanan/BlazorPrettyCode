@@ -1,0 +1,24 @@
+﻿@inject IDefaultSettings DefaultSettings
+
+<select value="@theme" @onchange="@OnChangeTheme">
+    <option value="PrettyCodeDefault">Default</option>
+    <option value="Material">Material</option>
+    <option value="SolarizedDark">Solarized Dark</option>
+    <option value="SolarizedLight">Solarized Light</option>
+</select>
+
+@code {
+    //TODO: Change this to use reflection instead of hard coding classes
+    private string theme = "PrettyCodeDefault";
+
+    protected override void OnInitialized()
+    {
+        theme = DefaultSettings.DefaultTheme;
+    }
+
+    protected void OnChangeTheme(UIChangeEventArgs e)
+    {
+        theme = (string)e.Value;
+        DefaultSettings.DefaultTheme = theme;
+    }
+}

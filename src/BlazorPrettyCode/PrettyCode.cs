@@ -1,4 +1,5 @@
-﻿using BlazorPrettyCode.Themes;
+﻿using BlazorPrettyCode.Internal;
+using BlazorPrettyCode.Themes;
 using BlazorStyled;
 using CSHTMLTokenizer;
 using CSHTMLTokenizer.Tokens;
@@ -15,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace BlazorPrettyCode
 {
-    public class PrettyCode : ComponentBase
+    public class PrettyCode : ComponentBase, IObserver<IDefaultSettings>, IDisposable
     {
         [Parameter] public bool? Debug { get; set; } = null;
         [Parameter] public string CodeFile { get; set; }
@@ -74,20 +75,20 @@ namespace BlazorPrettyCode
 
         [Inject] private HttpClient HttpClient { get; set; }
         [Inject] private IStyled Styled { get; set; }
-        [Inject] private DefaultSettings DefaultConfig { get; set; }
+        [Inject] private IDefaultSettings DefaultSettings { get; set; }
         [Inject] private ThemeCache ThemeCache { get; set; }
 
         private IStyled _styled;
+        private IDisposable _unsubscriber;
+        private bool _shouldRender;
 
         protected override async Task OnInitializedAsync()
         {
             _styled = Styled.WithId("pretty-code");
-            bool debug = Debug ?? DefaultConfig.IsDevelopmentMode;
-            bool showException = ShowException ?? DefaultConfig.ShowException;
-            _showCollapse = ShowCollapse ?? DefaultConfig.ShowCollapse;
-            _isCollapsed = IsCollapsed ?? DefaultConfig.IsCollapsed;
-            _attemptToFixTabs = AttemptToFixTabs ?? DefaultConfig.AttemptToFixTabs;
-            _KeepOriginalLineNumbers = KeepOriginalLineNumbers ?? DefaultConfig.KeepOriginalLineNumbers;
+            _unsubscriber = DefaultSettings.Subscribe(this);
+            bool debug = Debug ?? DefaultSettings.IsDevelopmentMode;
+            bool showException = ShowException ?? DefaultSettings.ShowException;
+            InitSettings();
 
             await InitSourceFile(showException);
 
@@ -98,6 +99,51 @@ namespace BlazorPrettyCode
 
             InitCSS();
             await InitThemeCss();
+            _shouldRender = true;
+        }
+
+        private void InitSettings()
+        {
+            _showCollapse = ShowCollapse ?? DefaultSettings.ShowCollapse;
+            _isCollapsed = IsCollapsed ?? DefaultSettings.IsCollapsed;
+            _attemptToFixTabs = AttemptToFixTabs ?? DefaultSettings.AttemptToFixTabs;
+            _KeepOriginalLineNumbers = KeepOriginalLineNumbers ?? DefaultSettings.KeepOriginalLineNumbers;
+        }
+
+        public void OnCompleted()
+        {
+            _unsubscriber.Dispose();
+        }
+
+        public void OnError(Exception error)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnNext(IDefaultSettings value)
+        {
+            DefaultSettings = value;
+            InitSettings();
+            InvokeAsync(() => InitThemeCss().ContinueWith((obj) => StateHasChanged()));
+            _shouldRender = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _unsubscriber.Dispose();
+            }
+        }
+
+        protected override bool ShouldRender()
+        {
+            return base.ShouldRender();
         }
 
         private async Task InitSourceFile(bool showException)
@@ -119,7 +165,7 @@ namespace BlazorPrettyCode
                 }
                 _codeLineNumbers = GetLineNumbers(CodeSectionFileLineNumbers);
                 codeSectionFileLinesString = GetLines(codeSectionString, _codeLineNumbers);
-                
+
                 if (!codeSectionFileLinesString.StartsWith("@code"))
                 {
                     codeSectionFileLinesString = $"@code {{\n{codeSectionFileLinesString}}}";
@@ -241,13 +287,13 @@ namespace BlazorPrettyCode
 
         private async Task InitThemeCss()
         {
-            string themeName = Theme ?? DefaultConfig.DefaultTheme;
+            string themeName = Theme ?? DefaultSettings.DefaultTheme;
             string uri = themeName.ToLower().StartsWith("http") ? themeName : "_content/BlazorPrettyCode/" + themeName + ".json";
 
             string strJson = await GetFromCacheOrNetwork(uri);
 
             Themes.Theme theme = JsonSerializer.Deserialize<Themes.Theme>(strJson);
-            _showLineNumbers = ShowLineNumbers ?? DefaultConfig.ShowLineNumbers;
+            _showLineNumbers = ShowLineNumbers ?? DefaultSettings.ShowLineNumbers;
 
             _styled.AddGoogleFonts(GetFonts(theme));
 
@@ -557,6 +603,7 @@ namespace BlazorPrettyCode
             }
             builder.CloseElement();
             builder.CloseElement();
+            _shouldRender = false;
         }
 
         private void BuildRenderTitle(RenderTreeBuilder builderTitle)
@@ -619,7 +666,11 @@ namespace BlazorPrettyCode
         {
             try
             {
-                if (!_KeepOriginalLineNumbers) return string.Empty;
+                if (!_KeepOriginalLineNumbers)
+                {
+                    return string.Empty;
+                }
+
                 if (_lineNumbers.Count >= _lineNum)
                 {
                     return " " + Styled.Css($"counter-reset: linenum {_lineNumbers[_lineNum - 1] - 1};");
@@ -639,7 +690,7 @@ namespace BlazorPrettyCode
             {
                 //ignored
             }
-            return String.Empty;
+            return string.Empty;
         }
 
         private void BuildRenderMain(RenderTreeBuilder builder, List<IToken> tokens)
@@ -949,6 +1000,5 @@ namespace BlazorPrettyCode
             }
 
         }
-
     }
 }

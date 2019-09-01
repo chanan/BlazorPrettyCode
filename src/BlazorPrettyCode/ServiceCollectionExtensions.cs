@@ -1,4 +1,5 @@
-﻿using BlazorPrettyCode.Themes;
+﻿using BlazorPrettyCode.Internal;
+using BlazorPrettyCode.Themes;
 using BlazorStyled;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -7,11 +8,11 @@ namespace BlazorPrettyCode
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddBlazorPrettyCode(this IServiceCollection serviceCollection, Action<DefaultSettings> defaultSettings)
+        public static IServiceCollection AddBlazorPrettyCode(this IServiceCollection serviceCollection, Action<IDefaultSettings> defaultSettings)
         {
-            DefaultSettings defaultSettingsObj = new DefaultSettings();
+            IDefaultSettings defaultSettingsObj = new DefaultSettings();
             defaultSettings(defaultSettingsObj);
-            serviceCollection.AddSingleton(defaultSettingsObj);
+            serviceCollection.AddSingleton<IDefaultSettings>(defaultSettingsObj);
             serviceCollection.AddSingleton<ThemeCache>();
             serviceCollection.AddBlazorStyled();
             return serviceCollection;

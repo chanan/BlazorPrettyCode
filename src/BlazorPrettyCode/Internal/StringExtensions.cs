@@ -1,4 +1,4 @@
-﻿namespace BlazorPrettyCode
+﻿namespace BlazorPrettyCode.Internal
 {
     internal static class StringExtensions
     {
