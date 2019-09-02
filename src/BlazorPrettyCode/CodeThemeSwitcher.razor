@@ -1,11 +1,14 @@
 ﻿@inject IDefaultSettings DefaultSettings
 
-<select value="@theme" @onchange="@OnChangeTheme">
-    <option value="PrettyCodeDefault">Default</option>
-    <option value="Material">Material</option>
-    <option value="SolarizedDark">Solarized Dark</option>
-    <option value="SolarizedLight">Solarized Light</option>
-</select>
+    <select value="@theme" @onchange="@OnChangeTheme">
+        <option value="PrettyCodeDefault">Default</option>
+        <option value="GithubPlus">Github Plus</option>
+        <option value="Material">Material</option>
+        <option value="SolarizedDark">Solarized Dark</option>
+        <option value="SolarizedLight">Solarized Light</option>
+        <option value="WinterIsComingDark">Winter is Coming Dark</option>
+        <option value="WinterIsComingLight">Winter is Coming Light</option>
+    </select>
 
 @code {
     //TODO: Change this to use reflection instead of hard coding classes

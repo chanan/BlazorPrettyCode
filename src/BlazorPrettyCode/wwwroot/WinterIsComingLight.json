@@ -1,52 +1,57 @@
 {
-  "Name": "Pretty Code Default",
+  "Name": "Winter Is Coming - Light",
   "Settings": [
     {
       "Settings": {
-        "background-color": "rgba(238,238,238,0.92)",
-        "color": "#000",
+        "background-color": "#FFFFFF",
+        "color": "#236ebf",
         "font-family": "'Fira Code'"
       }
     },
     {
       "Name": "Text",
-      "Settings": { "color": "#000" }
+      "Settings": { "color": "#236ebf" }
     },
     {
       "Name": "Tag symbols",
-      "Settings": { "color": "#03c" }
+      "Settings": { "color": "#0444ac" }
     },
     {
       "Name": "Tag name",
-      "Settings": { "color": "#03c" }
+      "Settings": { "color": "#0444ac" }
     },
     {
       "Name": "Attribute name",
       "Settings": {
-        "color": "#36c",
+        "color": "#df8618",
         "font-style": "italic"
       }
     },
     {
       "Name": "Attribute value",
-      "Settings": { "color": "#093" }
+      "Settings": { "color": "#bcf0c0" }
     },
     {
       "Name": "String",
-      "Settings": { "color": "#093" }
+      "Settings": { "color": "#87429A" }
+    },
+    {
+      "Name": "Quotes",
+      "Settings": {
+        "color": "#87429A",
+        "font-style": "italic"
+      }
     },
     {
       "Name": "Razor Keyword",
       "Settings": {
-        "background-color": "yellow",
-        "color": "black"
+        "color": "#7b30d0"
       }
     },
     {
       "Name": "Row Highlight",
       "Settings": {
-        "background-color": "yellow",
-        "color": "black"
+        "background-color": "#eff2ef"
       }
     },
     {
@@ -59,13 +64,14 @@
     {
       "Name": "CSS Propery",
       "Settings": {
-        "color": "#268BD2"
+        "color": "#7b30d0"
       }
     },
     {
       "Name": "CSS Class",
       "Settings": {
-        "color": "#B7A500"
+        "color": "#df8618",
+        "font-style": "italic"
       }
     }
   ]

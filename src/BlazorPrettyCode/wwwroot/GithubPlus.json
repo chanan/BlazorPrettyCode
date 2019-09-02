@@ -1,52 +1,49 @@
 {
-  "Name": "Pretty Code Default",
+  "Name": "Github Plus",
   "Settings": [
     {
       "Settings": {
-        "background-color": "rgba(238,238,238,0.92)",
-        "color": "#000",
+        "background-color": "ffffff",
+        "color": "#24292e",
         "font-family": "'Fira Code'"
       }
     },
     {
       "Name": "Text",
-      "Settings": { "color": "#000" }
+      "Settings": { "color": "#24292e" }
     },
     {
       "Name": "Tag symbols",
-      "Settings": { "color": "#03c" }
+      "Settings": { "color": "#24292e" }
     },
     {
       "Name": "Tag name",
-      "Settings": { "color": "#03c" }
+      "Settings": { "color": "#22863a" }
     },
     {
       "Name": "Attribute name",
       "Settings": {
-        "color": "#36c",
-        "font-style": "italic"
+        "color": "#6f42c1"
       }
     },
     {
       "Name": "Attribute value",
-      "Settings": { "color": "#093" }
+      "Settings": { "color": "#24292e" }
     },
     {
       "Name": "String",
-      "Settings": { "color": "#093" }
+      "Settings": { "color": "#22863a" }
     },
     {
       "Name": "Razor Keyword",
       "Settings": {
-        "background-color": "yellow",
-        "color": "black"
+        "color": "#d73a49"
       }
     },
     {
       "Name": "Row Highlight",
       "Settings": {
-        "background-color": "yellow",
-        "color": "black"
+        "background-color": "#fffbdd"
       }
     },
     {
@@ -59,13 +56,13 @@
     {
       "Name": "CSS Propery",
       "Settings": {
-        "color": "#268BD2"
+        "color": "#005cc5"
       }
     },
     {
       "Name": "CSS Class",
       "Settings": {
-        "color": "#B7A500"
+        "color": "#6f42c1"
       }
     }
   ]
