@@ -144,7 +144,12 @@ namespace BlazorPrettyCode
 
         protected override bool ShouldRender()
         {
-            return _shouldRender;
+            if (_shouldRender)
+            {
+                _shouldRender = false;
+                return true;
+            }
+            return false;
         }
 
         private async Task InitSourceFile(bool showException)
@@ -420,10 +425,14 @@ namespace BlazorPrettyCode
             // Expand / Collapse
 
             _baseCollapse = _styled.Css(@"
+                label: expand-collapse;
                 font-weight: normal;
                 font-size: 0.8em;
                 display: table-cell;
                 width: 10em;
+                border-bottom-style: solid;
+                border-bottom-width: 1px;
+                border-bottom-color: rgb(223, 225, 230);
                 &:hover {
                     text-decoration: underline;
                     cursor: pointer;
@@ -629,6 +638,8 @@ namespace BlazorPrettyCode
         private void OnClick()
         {
             _isCollapsed = !_isCollapsed;
+            _shouldRender = true;
+            //InvokeAsync(() => StateHasChanged());
         }
 
         private void BuildRenderLine(RenderTreeBuilder builderLine, Line line)
