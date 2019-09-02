@@ -124,7 +124,8 @@ namespace BlazorPrettyCode
         {
             DefaultSettings = value;
             InitSettings();
-            InvokeAsync(() => InitThemeCss().ContinueWith((obj) => StateHasChanged()));
+            InvokeAsync(() => InitThemeCss()).ContinueWith((obj) => InvokeAsync(() => StateHasChanged()));
+            _lineNum = 1;
             _shouldRender = true;
         }
 
