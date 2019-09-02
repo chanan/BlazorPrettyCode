@@ -143,7 +143,7 @@ namespace BlazorPrettyCode
 
         protected override bool ShouldRender()
         {
-            return base.ShouldRender();
+            return _shouldRender;
         }
 
         private async Task InitSourceFile(bool showException)
@@ -185,17 +185,6 @@ namespace BlazorPrettyCode
             {
                 FixTabs();
             }
-        }
-
-        private async Task<string> GetFromCacheOrNetwork(string uri)
-        {
-            if (ThemeCache.Cache.TryGetValue(uri, out string result))
-            {
-                return result;
-            }
-            string str = await HttpClient.GetStringAsync(uri);
-            ThemeCache.Cache.TryAdd(uri, str);
-            return str;
         }
 
         private void FixTabs()
@@ -328,6 +317,11 @@ namespace BlazorPrettyCode
                 string border = $"border-left: 0.5rem solid {color};";
                 _themeRowHighlightBorder = _styled.Css(border);
             }
+        }
+
+        private Task<string> GetFromCacheOrNetwork(string uri)
+        {
+            return ThemeCache.GetOrAdd(uri, new Func<Task<string>>(() => HttpClient.GetStringAsync(uri)));
         }
 
         private void InitCSS()
