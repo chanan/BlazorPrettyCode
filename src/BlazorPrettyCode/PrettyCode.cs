@@ -4,7 +4,8 @@ using BlazorStyled;
 using CSHTMLTokenizer;
 using CSHTMLTokenizer.Tokens;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.RenderTree;
+using Microsoft.AspNetCore.Components.Rendering;
+using Microsoft.AspNetCore.Components.Web;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -628,7 +629,7 @@ namespace BlazorPrettyCode
             {
                 builderTitle.OpenElement(Next(), "span");
                 builderTitle.AddAttribute(Next(), "class", _baseCollapse);
-                builderTitle.AddAttribute(3, "onclick", EventCallback.Factory.Create<UIMouseEventArgs>(this, OnClick));
+                builderTitle.AddAttribute(3, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, OnClick));
                 builderTitle.AddContent(Next(), _isCollapsed ? "Expand source" : "Collapse source");
                 builderTitle.CloseElement();
             }
