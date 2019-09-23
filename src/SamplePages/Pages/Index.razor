@@ -34,12 +34,15 @@
 
 <div><CodeThemeSwitcher /></div>
 
-<h2>Usage</h2>
+<h2>Install</h2>
 
 <p>Install: <a href="https://www.nuget.org/packages/BlazorPrettyCode/"><img src="https://img.shields.io/nuget/vpre/BlazorPrettyCode.svg" /></a></p>
+
+<h3>Client Side Support</h3>
+
 <p>
     Initialize <code>BlazorPrettyCode</code> in your <code>Startup.cs</code>: <code>services.AddBlazorPrettyCode();</code>. You may also set defaults.
-    In the <code>Configure</code> method add <code>AddClientSidePrettyCode</code> as well as shown below:
+    In the <code>Configure</code> method add <code>app.AddComponent&lt;ClientSideStyled>("#styled");</code> as well as shown below:
 </p>
 
 <PrettyCode CodeFile="_content/SamplePages/snippets/startup.html" HighlightLines="5,11" Title="Startup.cs" />
