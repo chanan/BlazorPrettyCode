@@ -1,18 +1,29 @@
-﻿using Microsoft.AspNetCore.Blazor.Hosting;
+﻿using BlazorPrettyCode;
+using BlazorStyled;
+using BlazorTypography;
+using Microsoft.AspNetCore.Blazor.Hosting;
+using SamplePages;
+using System.Threading.Tasks;
 
 namespace Sample
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
-        }
+            var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-        public static IWebAssemblyHostBuilder CreateHostBuilder(string[] args)
-        {
-            return BlazorWebAssemblyHost.CreateDefaultBuilder()
-.UseBlazorStartup<Startup>();
+            //Configure Services
+            builder.Services.AddBlazorPrettyCode();
+            builder.Services.AddTypography();
+            //End Configure Services
+
+            builder.RootComponents.Add<App>("app");
+
+            //Add BlazorStyled to root components
+            builder.RootComponents.Add<ClientSideStyled>("#styled");
+
+            await builder.Build().RunAsync();
         }
     }
 }
