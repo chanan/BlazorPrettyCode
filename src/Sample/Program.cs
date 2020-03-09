@@ -1,5 +1,4 @@
 ﻿using BlazorPrettyCode;
-using BlazorStyled;
 using BlazorTypography;
 using Microsoft.AspNetCore.Blazor.Hosting;
 using SamplePages;
@@ -19,9 +18,6 @@ namespace Sample
             //End Configure Services
 
             builder.RootComponents.Add<App>("app");
-
-            //Add BlazorStyled to root components
-            builder.RootComponents.Add<ClientSideStyled>("#styled");
 
             await builder.Build().RunAsync();
         }
