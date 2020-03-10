@@ -6,7 +6,7 @@
     <LangVersion>7.3</LangVersion>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <PackageId>BlazorPrettyCode</PackageId>
-    <Version>1.3.0</Version>
+    <Version>1.3.1</Version>
     <Authors>Chanan Braunstein</Authors>
     <Title>Blazor PrettyCode</Title>
     <Description>Razor Code Display Component</Description>
@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BlazorStyled" Version="2.0.0" />
+    <PackageReference Include="BlazorStyled" Version="2.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components" Version="3.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="3.1.2" />
   </ItemGroup>
