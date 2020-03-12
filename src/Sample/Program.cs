@@ -1,6 +1,7 @@
 ﻿using BlazorPrettyCode;
 using BlazorTypography;
-using Microsoft.AspNetCore.Blazor.Hosting;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using SamplePages;
 using System.Threading.Tasks;
 
@@ -13,6 +14,7 @@ namespace Sample
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
             //Configure Services
+            builder.Services.AddBaseAddressHttpClient();
             builder.Services.AddBlazorPrettyCode();
             builder.Services.AddTypography();
             //End Configure Services

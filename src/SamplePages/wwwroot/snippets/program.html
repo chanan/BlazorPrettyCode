@@ -4,6 +4,7 @@
     {
         var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
+        builder.Services.AddBaseAddressHttpClient();
         builder.Services.AddBlazorPrettyCode();
         builder.RootComponents.Add<App>("app");
 

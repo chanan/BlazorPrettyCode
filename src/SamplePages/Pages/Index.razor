@@ -38,11 +38,13 @@
 
 <p>Install: <a href="https://www.nuget.org/packages/BlazorPrettyCode/"><img src="https://img.shields.io/nuget/vpre/BlazorPrettyCode.svg" /></a></p>
 
-<p>
-    Initialize <code>BlazorPrettyCode</code> in your <code>Program.cs</code>: <code>builder.Services.AddBlazorPrettyCode();</code>. You may also set defaults.
-</p>
+<ul>
+    <li>Register <code>HttpClient</code> in your services in your <code>Program.cs</code></li>
+    <li>Initialize <code>BlazorPrettyCode</code> in your <code>Program.cs</code>: <code>builder.Services.AddBlazorPrettyCode();</code>. You may also set defaults.</li>
+</ul>
+    
 
-<PrettyCode CodeFile="_content/SamplePages/snippets/program.html" HighlightLines="7" Title="Program.cs" />
+<PrettyCode CodeFile="_content/SamplePages/snippets/program.html" HighlightLines="7,8" Title="Program.cs" />
 
 
 <p>In your Blazor component or in <code>_imports.razor</code> import the component: <code>@@using BlazorPrettyCode</code> and add it to your page:</p>

@@ -264,3 +264,6 @@ __pycache__/
 !/docs/*
 !/docs/_framework/*
 !/docs/_framework/_bin/*
+
+# Remove dist
+/dist
