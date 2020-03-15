@@ -591,6 +591,8 @@ namespace BlazorPrettyCode
 
         protected override void BuildRenderTree(RenderTreeBuilder builder)
         {
+            builder.OpenComponent<Styled>(Next());
+            builder.CloseComponent();
             builder.OpenElement(Next(), "div");
             builder.AddAttribute(Next(), "class", _baseDiv);
             builder.OpenElement(Next(), "pre");

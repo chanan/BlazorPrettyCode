@@ -14,7 +14,7 @@ namespace BlazorPrettyCode
             defaultSettings(defaultSettingsObj);
             serviceCollection.AddSingleton<IDefaultSettings>(defaultSettingsObj);
             serviceCollection.AddSingleton<ThemeCache>();
-            serviceCollection.AddBlazorStyled();
+            serviceCollection.AddBlazorStyled(isDevelopment: defaultSettingsObj.IsDevelopmentMode, isDebug: defaultSettingsObj.IsDevelopmentMode);
             return serviceCollection;
         }
 
