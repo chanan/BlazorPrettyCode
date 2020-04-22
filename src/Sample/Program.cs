@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using SamplePages;
 using System.Threading.Tasks;
+using System.Net.Http;
+using System;
 
 namespace Sample
 {
@@ -14,10 +16,11 @@ namespace Sample
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
             //Configure Services
-            builder.Services.AddBaseAddressHttpClient();
             builder.Services.AddBlazorPrettyCode();
             builder.Services.AddTypography();
             //End Configure Services
+
+            builder.Services.AddSingleton(new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
             builder.RootComponents.Add<App>("app");
 

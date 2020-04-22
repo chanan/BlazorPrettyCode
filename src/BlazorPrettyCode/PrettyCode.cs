@@ -288,7 +288,7 @@ namespace BlazorPrettyCode
 
             string strJson = await GetFromCacheOrNetwork(uri);
 
-            Themes.Theme theme = JsonSerializer.Deserialize<Themes.Theme>(strJson);
+            Theme theme = JsonSerializer.Deserialize<Themes.Theme>(strJson);
             _showLineNumbers = ShowLineNumbers ?? DefaultSettings.ShowLineNumbers;
 
             _styled.AddGoogleFonts(GetFonts(theme));
@@ -311,7 +311,7 @@ namespace BlazorPrettyCode
             _themeQuotedStringClass = _styled.Css(GetThemeValues(theme, "String"));
             _themeRazorKeywordClass = _styled.Css(GetThemeValues(theme, "Razor Keyword"));
             _themeTextClass = _styled.Css(GetThemeValues(theme, "Text"));
-            _themeCssProperty = _styled.Css(GetThemeValues(theme, "CSS Propery"));
+            _themeCssProperty = _styled.Css(GetThemeValues(theme, "CSS Property"));
             _themeCssClass = _styled.Css(GetThemeValues(theme, "CSS Class"));
 
             _highlightLines = GetLineNumbers(HighlightLines);
