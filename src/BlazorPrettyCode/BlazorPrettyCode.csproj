@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <RazorLangVersion>3.0</RazorLangVersion>
     <LangVersion>7.3</LangVersion>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <PackageId>BlazorPrettyCode</PackageId>
-    <Version>1.5.0-alpha-03</Version>
+    <Version>1.5.1-alpha-01</Version>
     <Authors>Chanan Braunstein</Authors>
     <Title>Blazor PrettyCode</Title>
     <Description>Razor Code Display Component</Description>
@@ -15,9 +15,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BlazorStyled" Version="3.0.0-alpha-05" />
-    <PackageReference Include="Microsoft.AspNetCore.Components" Version="3.1.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="3.1.2" />
+    <PackageReference Include="BlazorStyled" Version="3.0.1-alpha-01" />
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="3.1.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="3.1.4" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,8 +28,6 @@
     <EmbeddedResource Include="content\**" Exclude="**\*.js;**\*.css" LogicalName="blazor:file:%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\BlazorStyled\src\BlazorStyled\BlazorStyled.csproj" />
-  </ItemGroup>
+ 
 
 </Project>
